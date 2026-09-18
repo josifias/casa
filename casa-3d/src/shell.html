@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apartamento 3D · 2 quartos</title>
+<meta name="description" content="Passeio 3D ilustrativo pelo apartamento tipo de 2 quartos (36,24 m²) do Viva Vida Sul, todo decorado. Funciona no celular.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Apartamento 2 quartos em 3D – Viva Vida Sul (ilustrativo)">
+<meta property="og:description" content="Passeie pelo apê decorado de 36,24 m² direto no celular: sala, cozinha, quartos e banheiro.">
+<meta property="og:image" content="preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#1f1c19">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg1:#efe9e1; --bg2:#d9d0c4;
+  --glass:rgba(28,25,22,.72); --glass-2:rgba(28,25,22,.55);
+  --line:rgba(255,255,255,.14); --txt:#f6f1ea; --muted:#c9bfb2;
+  --accent:#e0874f; --accent-2:#f1b27f;
+  --radius:14px; --gap:10px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--txt);-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(120% 90% at 50% 20%,var(--bg1),var(--bg2))}
+body.night{--bg1:#2a2f3a;--bg2:#12141a}
+#app{position:fixed;inset:0;touch-action:none}
+#app canvas{display:block;width:100%;height:100%;outline:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* barra superior */
+.top{position:fixed;left:0;right:0;top:0;padding:calc(10px + var(--safe-t)) 12px 0;display:flex;align-items:flex-start;gap:var(--gap);pointer-events:none;z-index:5}
+.brand{pointer-events:auto;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:8px 12px;min-width:0}
+.brand h1{margin:0;font-size:15px;font-weight:650;letter-spacing:.2px;white-space:nowrap}
+.brand p{margin:2px 0 0;font-size:12px;color:var(--muted);white-space:nowrap}
+.tools{margin-left:auto;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.ib{height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);font-size:13px;font-weight:600;transition:background .2s}
+.ib:hover{background:rgba(50,45,40,.85)}
+.ib[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:#1d1510}
+.ib .lbl{white-space:nowrap}
+
+/* modos */
+.modes{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));display:flex;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:4px;z-index:5}
+.modes button{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.modes button[aria-selected="true"]{background:#f6f1ea;color:#221c16}
+
+/* miniaturas */
+.bottom{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(8px + var(--safe-b));z-index:5;pointer-events:none}
+.thumbs{pointer-events:auto;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 2px;margin:0 auto;max-width:max-content;scroll-snap-type:x proximity}
+.thumbs::-webkit-scrollbar{display:none}
+.thumb{scroll-snap-align:center;flex:0 0 auto;width:84px;height:74px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:600;color:#eee6db;transition:transform .15s,background .2s}
+.thumb svg{width:28px;height:28px;stroke-width:1.5}
+.thumb:hover{transform:translateY(-2px)}
+.thumb[aria-current="true"]{background:#f6f1ea;color:#221c16}
+.disc{pointer-events:auto;text-align:center;font-size:10.5px;color:rgba(40,34,28,.75);margin-top:2px;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+body.night .disc{color:rgba(230,225,215,.6);text-shadow:none}
+.disc button{text-decoration:underline;font-size:inherit}
+
+/* minimapa */
+.mini{position:fixed;right:12px;bottom:calc(108px + var(--safe-b));width:210px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:8px;z-index:4}
+.mini svg{display:block;width:100%;height:auto;cursor:crosshair}
+.mini .cap{font-size:11px;color:var(--muted);margin:0 2px 4px;display:flex;justify-content:space-between}
+
+/* rótulos 3D e hotspots */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.lab{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;background:rgba(255,252,247,.92);color:#2a221b;border-radius:10px;padding:5px 9px;font-size:12px;font-weight:650;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;cursor:pointer}
+.lab small{display:block;font-weight:500;color:#6d6258;font-size:11px}
+.hot{position:absolute;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;pointer-events:auto;cursor:pointer;border:3px solid rgba(255,255,255,.95);background:radial-gradient(circle,rgba(255,255,255,.55) 0 30%,rgba(255,255,255,.12) 31%);box-shadow:0 0 0 3px rgba(0,0,0,.15),0 6px 18px rgba(0,0,0,.25);transition:transform .15s}
+.hot:hover{transform:scale(1.12)}
+.hot span{position:absolute;left:50%;top:-26px;transform:translateX(-50%);background:rgba(28,25,22,.8);color:#fff;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:8px;white-space:nowrap}
+
+/* joystick */
+.joy{position:fixed;left:18px;bottom:calc(112px + var(--safe-b));width:112px;height:112px;border-radius:50%;background:rgba(28,25,22,.35);border:1px solid rgba(255,255,255,.35);z-index:4;display:none;touch-action:none}
+.joy i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+body.walk.touch .joy{display:block}
+
+/* dica */
+.hint{position:fixed;left:50%;top:calc(116px + var(--safe-t));transform:translateX(-50%);background:rgba(28,25,22,.78);padding:8px 14px;border-radius:999px;font-size:12.5px;z-index:6;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+.hint.on{opacity:1}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,8,6,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal.on{display:flex}
+.card{background:#fbf8f3;color:#2a221b;border-radius:18px;max-width:560px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;padding:20px 20px 16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.card h2{margin:0 0 4px;font-size:19px}
+.card h3{margin:16px 0 6px;font-size:14px;color:#9a5a32;text-transform:uppercase;letter-spacing:.5px}
+.card p,.card li{font-size:13.5px;line-height:1.5;color:#43392f}
+.card ul{padding-left:18px;margin:6px 0}
+.card table{width:100%;border-collapse:collapse;font-size:13.5px}
+.card td{padding:6px 4px;border-bottom:1px solid #ebe3d8}
+.card td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:#6b5f53}
+.card .close{float:right;width:34px;height:34px;border-radius:10px;background:#efe7dc;color:#2a221b;font-size:18px}
+.card .note{background:#f3ebe0;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#5b4f44}
+
+/* carregando */
+#loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(120% 90% at 50% 20%,#efe9e1,#d9d0c4);color:#3a2f26;z-index:30;transition:opacity .5s}
+#loader.off{opacity:0;pointer-events:none}
+#loader .sp{width:42px;height:42px;border-radius:50%;border:4px solid rgba(58,47,38,.2);border-top-color:#c46a3a;animation:rot 1s linear infinite}
+#loader b{font-size:15px}
+#loader small{font-size:12px;opacity:.7;max-width:280px;text-align:center}
+@keyframes rot{to{transform:rotate(360deg)}}
+#fps{position:fixed;left:8px;bottom:8px;z-index:40;font:12px monospace;background:#000a;color:#0f0;padding:3px 6px;border-radius:4px;display:none}
+
+body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint{display:none!important}
+
+@media (max-width:720px){
+  .brand{padding:6px 10px}
+  .brand h1{font-size:13.5px}
+  .brand p{font-size:11px}
+  .ib{height:38px;min-width:38px;padding:0 8px}
+  .ib .lbl{display:none}
+  .modes{top:calc(60px + var(--safe-t))}
+  .modes button{padding:8px 11px;font-size:12.5px}
+  .modes button svg{display:none}
+  .thumb{width:72px;height:64px;font-size:10.5px}
+  .thumb svg{width:24px;height:24px}
+  .mini{width:132px;right:10px;top:calc(110px + var(--safe-t));bottom:auto;padding:6px}
+  .mini .cap{display:none}
+  .hint{top:auto;bottom:calc(104px + var(--safe-b))}
+  body:not(.walk) .mini{display:none}
+}
+@media (max-width:440px){
+  .brand .lg{display:none}
+  .tools{gap:5px}
+  .ib{height:36px;min-width:36px;padding:0 7px}
+  .modes{top:calc(56px + var(--safe-t))}
+  .modes button{padding:8px 10px;font-size:12px}
+  .mini{top:calc(104px + var(--safe-t))}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="labels"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1><span class="lg">Apartamento tipo · </span>2 quartos</h1>
+    <p>36,24 m²<span class="lg"> · Viva Vida Sul</span> · 3D ilustrativo</p>
+  </div>
+  <div class="tools">
+    <button class="ib" id="bStyle" title="Trocar estilo da decoração"><svg class="i" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5C21 6.5 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.2" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg><span class="lbl" id="bStyleLbl">Estilo: Tour 360°</span></button>
+    <button class="ib" id="bNight" title="Dia / noite" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg><span class="lbl">Noite</span></button>
+    <button class="ib" id="bMirror" title="Planta espelhada (algumas unidades são invertidas)" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M8 7 3 12l5 5V7ZM16 7l5 5-5 5V7Z"/></svg><span class="lbl">Espelhar</span></button>
+    <button class="ib" id="bInfo" title="Ficha técnica e ajuda"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
+    <button class="ib" id="bFull" title="Tela cheia"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</header>
+
+<nav class="modes" role="tablist">
+  <button role="tab" data-mode="maquete" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Maquete</button>
+  <button role="tab" data-mode="planta" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M11 4v7H3M11 15v5M15 11h6"/></svg>Planta</button>
+  <button role="tab" data-mode="passeio" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m9 21 2-6 3 3v3M14 18l-1-6-3 1-2 4M13 12l3 2 3-1"/></svg>Passeio 360°</button>
+</nav>
+
+<div class="mini" id="mini"><div class="cap"><span>Mapa</span><span>toque para ir</span></div><svg id="miniSvg" viewBox="-0.3 -0.3 8.2 5.4"></svg></div>
+<div class="joy" id="joy"><i></i></div>
+<div class="hint" id="hint"></div>
+
+<footer class="bottom">
+  <div class="thumbs" id="thumbs"></div>
+  <div class="disc">Ilustração independente · sem vínculo com a construtora · móveis não inclusos · <button id="bInfo2">saiba mais</button></div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="card">
+    <button class="close" id="mClose" aria-label="Fechar">×</button>
+    <h2 id="mTitle">Apartamento tipo · 2 quartos</h2>
+    <p>Área privativa de <b>36,24 m²</b>: 2 quartos, sala de estar/jantar, cozinha e área de serviço conjugadas e banheiro.</p>
+    <h3>Medidas internas (aprox.)</h3>
+    <table>
+      <tr><td>Sala estar/jantar</td><td>2,40 × 3,10 m</td></tr>
+      <tr><td>Quarto 1 (casal)</td><td>2,40 × 3,00 m</td></tr>
+      <tr><td>Quarto 2 (infantil)</td><td>2,40 × 3,00 m</td></tr>
+      <tr><td>Cozinha / área de serviço</td><td>5,30 × 1,50 m</td></tr>
+      <tr><td>Banheiro</td><td>2,00 × 1,50 m</td></tr>
+    </table>
+    <h3>Como navegar</h3>
+    <ul>
+      <li><b>Maquete:</b> arraste para girar, pinça/roda para zoom. Toque num cômodo para entrar.</li>
+      <li><b>Planta:</b> vista de cima com as medidas de cada ambiente.</li>
+      <li><b>Passeio 360°:</b> arraste para olhar em volta, toque no chão para andar, use os círculos para ir a outro cômodo. No celular há um joystick; no computador, WASD ou setas.</li>
+      <li>Toque nas <b>portas</b> para abrir ou fechar.</li>
+    </ul>
+    <h3>Estilos de decoração</h3>
+    <ul>
+      <li><b>Tour 360°:</b> inspirado no decorado virtual (tons creme e terracota, beliche azul, lustre dourado).</li>
+      <li><b>Fotos do decorado:</b> inspirado no apartamento decorado visitado (madeira clara, verde-sálvia, rede amarela, cadeiras de palhinha).</li>
+    </ul>
+    <h3>Como é entregue (memorial)</h3>
+    <ul>
+      <li><b>Sala e quartos:</b> piso em laje de concreto sem acabamento; paredes e teto com pintura rolada.</li>
+      <li><b>Banheiro:</b> piso cerâmico; box com cerâmica do piso ao teto; bacia com caixa acoplada; lavatório sem coluna.</li>
+      <li><b>Cozinha/serviço:</b> piso cerâmico; parede hidráulica com cerâmica até ~1,50 m; bancada de mármore sintético com cuba; tanque em SMC.</li>
+      <li>Esquadrias brancas e previsão de infraestrutura para split.</li>
+    </ul>
+    <p class="note">Visualização 3D ilustrativa criada de forma independente a partir da planta de divulgação. <b>Não é material oficial da construtora.</b> Móveis, decoração, pisos de madeira e eletrodomésticos não fazem parte do imóvel entregue. Medidas aproximadas; algumas unidades têm a planta espelhada.</p>
+  </div>
+</div>
+
+<div id="loader"><div class="sp"></div><b>Montando o apartamento…</b><small>Na primeira vez pode levar alguns segundos no celular.</small></div>
+<div id="fps"></div>
+
+<script>window.__errors = []; addEventListener("error", (e) => window.__errors.push(String(e.message)));</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+/*__JS__*/
+</script>
+</body>
+</html>

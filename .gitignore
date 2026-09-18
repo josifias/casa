@@ -1,0 +1,11 @@
+# Esta pasta (c:\Dev\casa) tem documentos e fotos pessoais ao lado do projeto.
+# Por segurança, ignoramos TUDO na raiz por padrão e liberamos manualmente
+# só o que deve ir para o repositório. Assim, qualquer arquivo novo que for
+# salvo aqui (foto, PDF, print) fica de fora automaticamente, sem precisar
+# lembrar de atualizar esta lista.
+
+/*
+
+# Único conteúdo que deve ser versionado/enviado:
+!/casa-3d/
+!/.gitignore

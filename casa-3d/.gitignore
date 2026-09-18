@@ -1,0 +1,14 @@
+# Segredos e configuração local — nunca versionar
+.env
+.env.*
+!.env.example
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Ferramentas
+node_modules/
+.vercel
