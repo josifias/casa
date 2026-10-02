@@ -9,6 +9,10 @@ Dois passeios 3D interativos, feitos no navegador:
 
 > Ilustração 3D independente, feita a partir da planta e do masterplan de divulgação pública do empreendimento. **Não é material oficial da construtora.** Móveis, decoração e acabamentos mostrados não fazem parte do imóvel entregue — veja a ficha técnica dentro do próprio app.
 
+## Música ambiente
+
+As duas páginas têm um botão **Música** (ou tecla `M`) que toca, em loop e com fade, a *Gymnopédie nº 1* (Erik Satie) na gravação de **Kevin MacLeod** ([incompetech.com](https://incompetech.com)), licenciada sob [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/). O arquivo `musica/gymnopedie-1.mp3` foi convertido do original do Wikimedia Commons para MP3 de 112 kbps (2,6 MB); o crédito também aparece na ficha de cada página. A música só começa depois de um toque/clique (regra dos navegadores) e a preferência fica salva no aparelho.
+
 ## Tecnologia
 
 Páginas únicas (`index.html` e `condominio/index.html`), sem backend, sem build step em produção. Usa [Three.js](https://threejs.org/) via CDN ([jsDelivr](https://www.jsdelivr.com/), versão fixada) para toda a modelagem 3D — arquitetura, móveis e texturas são gerados por código, sem assets externos.

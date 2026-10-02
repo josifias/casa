@@ -47,6 +47,9 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 
 /* modos */
 .modes{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));display:flex;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:4px;z-index:5}
+.music{position:fixed;left:12px;top:calc(68px + var(--safe-t));z-index:5}
+.music[aria-pressed="true"] svg{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.18)}}
 .modes button{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
 .modes button[aria-selected="true"]{background:#f6f1ea;color:#221c16}
 
@@ -110,6 +113,7 @@ body.walk.touch .joy{display:block}
 body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint{display:none!important}
 
 @media (max-width:720px){
+  .music{left:10px;top:calc(106px + var(--safe-t))}
   .brand{padding:6px 10px}
   .brand h1{font-size:13.5px}
   .brand p{font-size:11px}
@@ -154,6 +158,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
     <button class="ib" id="bFull" title="Tela cheia"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
 </header>
+<button class="ib music" id="bMusic" data-src="musica/gymnopedie-1.mp3" title="Música ambiente: Gymnopédie nº 1, de Erik Satie (tecla M)" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span class="lbl">Música</span></button>
 
 <nav class="modes" role="tablist">
   <button role="tab" data-mode="maquete" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Maquete</button>
@@ -190,6 +195,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li><b>Passeio 360°:</b> arraste para olhar em volta, toque no chão para andar, use os círculos para ir a outro cômodo. No celular há um joystick; no computador, WASD ou setas.</li>
       <li>Toque nas <b>portas</b> para abrir ou fechar.</li>
       <li>O botão <b>Condomínio</b> abre o passeio 3D pelo condomínio inteiro (blocos, piscina, salão de festas, praças).</li>
+      <li>O botão <b>Música</b> (ou a tecla <kbd>M</kbd>) liga e desliga a música ambiente.</li>
     </ul>
     <h3>Estilos de decoração</h3>
     <ul>
@@ -204,6 +210,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li>Esquadrias brancas e previsão de infraestrutura para split.</li>
     </ul>
     <p class="note">Visualização 3D ilustrativa criada de forma independente a partir da planta de divulgação. <b>Não é material oficial da construtora.</b> Móveis, decoração, pisos de madeira e eletrodomésticos não fazem parte do imóvel entregue. Medidas aproximadas; algumas unidades têm a planta espelhada.</p>
+    <p class="note">Música ambiente: <i>Gymnopédie nº 1</i> (Erik Satie), gravação de <a href="https://incompetech.com" target="_blank" rel="noopener">Kevin MacLeod</a>, licença <a href="https://creativecommons.org/licenses/by/3.0/deed.pt-br" target="_blank" rel="noopener">CC BY 3.0</a> (convertida para MP3 de 112 kbps).</p>
   </div>
 </div>
 
@@ -211,6 +218,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
 <div id="fps"></div>
 
 <script>window.__errors = []; addEventListener("error", (e) => window.__errors.push(String(e.message)));</script>
+<script src="musica/musica.js" defer></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
