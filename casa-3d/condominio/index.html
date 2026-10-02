@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Condomínio 3D · Viva Vida Sul</title>
+<meta name="author" content="Josifias Lima">
 <meta name="description" content="Passeio 3D ilustrativo pelo condomínio Viva Vida Sul: 16 blocos, piscina, salão de festas, playground e praças. Funciona no celular.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://casa-josifias.vercel.app/condominio/">
@@ -48,6 +49,11 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .music{position:fixed;left:12px;top:calc(68px + var(--safe-t));z-index:5}
 .music[aria-pressed="true"] svg{animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.18)}}
+.ib.wa{position:fixed;left:12px;top:calc(116px + var(--safe-t));z-index:5;background:#1fa855;border-color:transparent;color:#fff}
+.ib.wa:hover{background:#178a45}
+.card .wa-btn{display:inline-flex;align-items:center;gap:8px;background:#1fa855;color:#fff;text-decoration:none;font-weight:650;font-size:14px;padding:9px 14px;border-radius:12px}
+.card .wa-btn svg{width:20px;height:20px}
+.disc b{font-weight:650}
 .modes button{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
 .modes button[aria-selected="true"]{background:#f6f1ea;color:#221c16}
 
@@ -106,6 +112,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
 
 @media (max-width:720px){
   .music{left:10px;top:calc(106px + var(--safe-t))}
+  .ib.wa{left:10px;top:calc(150px + var(--safe-t))}
   .brand{padding:6px 10px}
   .brand h1{font-size:13.5px}
   .brand p{font-size:11px}
@@ -147,6 +154,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
   </div>
 </header>
 <button class="ib music" id="bMusic" data-src="../musica/gymnopedie-1.mp3" title="Música ambiente: Gymnopédie nº 1, de Erik Satie (tecla M)" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span class="lbl">Música</span></button>
+<a class="ib wa" id="bWa" href="https://wa.me/5585998156542?text=Ol%C3%A1%2C%20Josifias%21%20Vi%20o%20passeio%203D%20do%20Viva%20Vida%20Sul%20e%20gostaria%20de%20falar%20com%20voc%C3%AA." target="_blank" rel="noopener" title="Fale com o desenvolvedor pelo WhatsApp: (85) 99815-6542"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6Z"/><path d="M9.2 8.6c.2-.5.6-.5.9-.5h.4c.2 0 .4.1.5.4l.6 1.4c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.4 1.9 2.5 2.5l.6-.5c.2-.2.4-.2.6-.1l1.4.6c.3.1.4.3.4.5v.4c0 .4-.1.8-.6 1-.8.4-2 .3-3.6-.8-1.5-1-2.6-2.4-3.1-3.6-.4-1.2-.2-2.1 0-2.5Z"/></svg><span class="lbl">Contato</span></a>
 
 <nav class="modes" role="tablist">
   <button role="tab" data-mode="aerea" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Vista aérea</button>
@@ -160,7 +168,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
 
 <footer class="bottom">
   <div class="thumbs" id="thumbs"></div>
-  <div class="disc">Ilustração independente · sem vínculo com a construtora · <button id="bInfo2">saiba mais</button></div>
+  <div class="disc">Desenvolvido por <b>Josifias Lima</b> · ilustração independente · sem vínculo com a construtora · <button id="bInfo2">saiba mais</button></div>
 </footer>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -190,6 +198,9 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li>As miniaturas embaixo levam direto à portaria, piscina, salão, playground, praças e demais áreas. <kbd>N</kbd> alterna dia e noite.</li>
       <li>O botão <b>Música</b> (ou a tecla <kbd>M</kbd>) liga e desliga a música ambiente.</li>
     </ul>
+    <h3>Desenvolvedor</h3>
+    <p>Desenvolvido por <b>Josifias Lima</b>. Dúvidas, sugestões ou quer um projeto assim? Fale comigo:</p>
+    <p><a class="wa-btn" href="https://wa.me/5585998156542?text=Ol%C3%A1%2C%20Josifias%21%20Vi%20o%20passeio%203D%20do%20Viva%20Vida%20Sul%20e%20gostaria%20de%20falar%20com%20voc%C3%AA." target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6Z"/><path d="M9.2 8.6c.2-.5.6-.5.9-.5h.4c.2 0 .4.1.5.4l.6 1.4c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.4 1.9 2.5 2.5l.6-.5c.2-.2.4-.2.6-.1l1.4.6c.3.1.4.3.4.5v.4c0 .4-.1.8-.6 1-.8.4-2 .3-3.6-.8-1.5-1-2.6-2.4-3.1-3.6-.4-1.2-.2-2.1 0-2.5Z"/></svg>WhatsApp (85) 99815-6542</a></p>
     <p class="note">Visualização 3D ilustrativa, criada de forma independente a partir do masterplan de divulgação. <b>Não é material oficial da construtora.</b> Posições, cores e equipamentos são aproximados; mobiliário e paisagismo podem ser diferentes do entregue.</p>
     <p class="note">Música ambiente: <i>Gymnopédie nº 1</i> (Erik Satie), gravação de <a href="https://incompetech.com" target="_blank" rel="noopener">Kevin MacLeod</a>, licença <a href="https://creativecommons.org/licenses/by/3.0/deed.pt-br" target="_blank" rel="noopener">CC BY 3.0</a> (convertida para MP3 de 112 kbps).</p>
   </div>
