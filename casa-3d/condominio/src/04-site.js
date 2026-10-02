@@ -95,7 +95,7 @@ function genWall() {
 
 // ---------- guarita com eclusa ----------
 function genGuarita() {
-  flat(.2, 82, 6.5, 89, M.paving, .06);
+  flat(.2, 82, 6.5, 89, M.paving, .06); occ(.2, 82, 6.5, 89);
   B(1.2, 0, 83, 5.2, 2.8, 87.5, M.white);
   addColl(1.2, 83, 5.2, 87.5);
   for (const [a, b] of [[1.6, 2.9], [3.4, 4.7]]) { B(a, 1, 82.94, b, 2.1, 83, M.frame, { cast: false }); B(a + .05, 1.05, 82.92, b - .05, 2.05, 82.95, M.glassLit, { cast: false }); }
@@ -194,7 +194,7 @@ function genBuilding(b, R) {
 
 // ---------- caminhos principais ----------
 function genPaths() {
-  const P = (x0, z0, x1, z1) => flat(x0, z0, x1, z1, M.paving, .05);
+  const P = (x0, z0, x1, z1) => { flat(x0, z0, x1, z1, M.paving, .05); occ(x0, z0, x1, z1); };
   P(2, 34, 5, 75); P(2, 89, 5, 127); P(0, 89, 2, 91);
   P(2, 34, 32, 36); P(2, 53, 41, 55);
   P(77, 3, 79, 106); P(75, 106, 77, 127);
