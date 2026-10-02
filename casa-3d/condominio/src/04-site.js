@@ -114,7 +114,9 @@ function genBuilding(b, R) {
   const LB = (a0, y0, c0, a1, y1, c1, mat, o) => HD ? B(r.x0 + a0, y0, r.z0 + c0, r.x0 + a1, y1, r.z0 + c1, mat, o) : B(r.x0 + c0, y0, r.z0 + a0, r.x0 + c1, y1, r.z0 + a1, mat, o);
   const toLot = (a, c) => HD ? [r.x0 + a, r.z0 + c] : [r.x0 + c, r.z0 + a];
   const ROWS = [[0, ROW], [ROW + COR, BWID]];
-  const cores = [UNIT - 1.5, 3 * UNIT - 1.5];
+  // Faixa entre as fileiras: um núcleo fechado de escada por bloco (cobre as portas dos 4 apartamentos),
+  // um vão aberto no meio (janelas de serviço frente a frente) e as pontas abertas, que são a entrada.
+  const CORES = [[4, 11.2], [BLEN - 11.2, BLEN - 4]];
   const NC = { cast: false };
 
   for (const [c0, c1] of ROWS) {
@@ -144,52 +146,67 @@ function genBuilding(b, R) {
         const litSala = R() < .35;
         for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) { const [p0, p1] = span(a0, a1); win(outer, p0, p1, yb + 1, yb + 2.2, sala ? litSala : R() < .3); }
       }
-      for (const inner of [FACES[1], FACES[2]]) {
-        const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false);
-        const [d0, d1] = span(4.4, 5.2);
-        P(d0 - .06, yb, d1 + .06, yb + 2.16, inner, .05, M.frame); P(d0, yb, d1, yb + 2.1, inner, .07, M.door, .05);
-      }
+      for (const inner of [FACES[1], FACES[2]]) { const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); }
     }
   }
-  // circulação: piso, passarelas, guarda-corpos e núcleos de escada
-  const [cx0, cz0] = toLot(-2.6, ROW), [cx1, cz1] = toLot(BLEN + 2.6, ROW + COR);
-  flat(Math.min(cx0, cx1), Math.min(cz0, cz1), Math.max(cx0, cx1), Math.max(cz0, cz1), M.paving, .06);
-  const runs = [[0, cores[0]], [cores[0] + 3, cores[1]], [cores[1] + 3, BLEN]];
-  for (let k = 1; k < F; k++) {
-    const y = k * FLOOR_H;
-    for (const [a0, a1] of runs) {
-      LB(a0, y - .2, ROW, a1, y, ROW + 1, M.concrete, NC); LB(a0, y - .2, ROW + COR - 1, a1, y, ROW + COR, M.concrete, NC);
-      LB(a0, y, ROW + .98, a1, y + 1.05, ROW + 1.0, M.railing, NC); LB(a0, y, ROW + COR - 1.0, a1, y + 1.05, ROW + COR - .98, M.railing, NC);
+  // faixa central: piso das entradas, cascalho no vão do meio e núcleos de escada
+  const mid = ROW + COR / 2, NH = HT + .35;
+  const stripFlat = (a0, a1, mat, top) => { const [x0, z0] = toLot(a0, ROW), [x1, z1] = toLot(a1, ROW + COR); flat(Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1), mat, top); };
+  stripFlat(-2.6, CORES[0][0], M.paving, .06); stripFlat(CORES[1][1], BLEN + 2.6, M.paving, .06);
+  stripFlat(CORES[0][1], CORES[1][0], M.gravel, .08);
+  // janela numa parede transversal do núcleo (a constante), voltada para s = ±1
+  const AT = (a, s, d0, d1) => s > 0 ? [a + d0, a + d1] : [a - d1, a - d0];
+  const winT = (a, s, w, y0, y1, mat) => {
+    const c0 = mid - w / 2, c1 = mid + w / 2;
+    let [p, q] = AT(a, s, 0, .07); LB(p, y0 - .06, c0 - .06, q, y1 + .06, c1 + .06, M.frame, NC);
+    [p, q] = AT(a, s, .07, .075); LB(p, y0 + .04, c0 + .04, q, y1 - .04, c1 - .04, mat, NC);
+    [p, q] = AT(a, s, .07, .085); LB(p, y0, mid - .025, q, y1, mid + .025, M.frame, NC);
+    [p, q] = AT(a, s, 0, .13); LB(p, y0 - .1, c0 - .1, q, y0 - .04, c1 + .1, M.white, NC);
+  };
+  CORES.forEach(([a0, a1], i) => {
+    LB(a0, 0, ROW, a1, NH, ROW + COR, M.wallGray);
+    LB(a0 - .05, NH, ROW, a1 + .05, NH + .1, ROW + COR, M.roof, NC);
+    // janelão da escada em cada andar, nas duas paredes de ponta do núcleo
+    const out = i === 0 ? [a0, -1] : [a1, 1], inn = i === 0 ? [a1, 1] : [a0, -1];
+    for (let k = 0; k < F; k++) {
+      winT(inn[0], inn[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3, M.glassLit);
+      if (k > 0) winT(out[0], out[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3, M.glassLit);
     }
-    for (const a of [0, BLEN - .02]) { LB(a, y, ROW, a + .02, y + 1.05, ROW + 1, M.railing, NC); LB(a, y, ROW + COR - 1, a + .02, y + 1.05, ROW + COR, M.railing, NC); }
+    // entrada do bloco: porta de vidro, marquise com luminária e placa
+    const [e, s1] = out;
+    let [p, q] = AT(e, s1, 0, .06); LB(p, 0, mid - .7, q, 2.3, mid + .7, M.darkMetal, NC);
+    [p, q] = AT(e, s1, .06, .07); LB(p, .05, mid - .62, q, 2.22, mid + .62, M.glass, NC);
+    [p, q] = AT(e, s1, .07, .1); LB(p, 1.0, mid - .5, q, 1.04, mid + .5, M.metal, NC);
+    [p, q] = AT(e, s1, 0, 1.4); LB(p, 2.55, ROW + .12, q, 2.7, ROW + COR - .12, M.concrete, NC);
+    [p, q] = AT(e, s1, .55, .85); LB(p, 2.5, mid - .15, q, 2.55, mid + .15, M.bulb, NC);
+    const [lx, lz] = toLot((p + q) / 2, mid); LAMPS.push({ x: lx, y: 2.45, z: lz, small: true });
+    const [sx, sz] = toLot(e + s1 * .03, mid);
+    SIGN('BLOCO ' + b.blocks[i], sx, 3.15, sz, 1.9, .48, HD ? (s1 > 0 ? 'px' : 'nx') : (s1 > 0 ? 'pz' : 'nz'));
+  });
+  // cobertura: cada fileira com platibanda própria e divisão entre os apartamentos (como no masterplan)
+  const roofCream = C('#d6cbb2', .95), PH = .8;
+  for (const [c0, c1] of ROWS) {
+    LB(0, HT, c0, BLEN, HT + .12, c1, roofCream, NC);
+    LB(-.02, HT, c0 - .02, BLEN + .02, HT + PH, c0 + .18, M.wall); LB(-.02, HT, c1 - .18, BLEN + .02, HT + PH, c1 + .02, M.wall);
+    LB(-.02, HT, c0, .18, HT + PH, c1, M.wall); LB(BLEN - .18, HT, c0, BLEN + .02, HT + PH, c1, M.wall);
+    LB(-.05, HT + PH, c0 - .05, BLEN + .05, HT + PH + .07, c0 + .21, M.wallDark, NC); LB(-.05, HT + PH, c1 - .21, BLEN + .05, HT + PH + .07, c1 + .05, M.wallDark, NC);
+    LB(-.05, HT + PH, c0 + .21, .21, HT + PH + .07, c1 - .21, M.wallDark, NC); LB(BLEN - .21, HT + PH, c0 + .21, BLEN + .05, HT + PH + .07, c1 - .21, M.wallDark, NC);
+    for (const a of [UNIT, 2 * UNIT, 3 * UNIT]) LB(a - .08, HT, c0 + .18, a + .08, HT + .45, c1 - .18, M.wall, NC);
   }
-  for (const c0 of cores) {
-    LB(c0, 0, ROW, c0 + 3, HT + 2.4, ROW + COR, M.wallGray);
-    LB(c0 + .3, HT + 2.4, ROW + .2, c0 + 2.7, HT + 3.3, ROW + COR - .2, M.white);
-    for (const a of [c0 - .01, c0 + 3]) for (let k = 0; k < F; k++) LB(a, k * FLOOR_H + 1, ROW + .6, a + .01, k * FLOOR_H + 2.4, ROW + COR - .6, M.cobogo, NC);
-  }
-  // cobertura e platibanda
-  LB(0, HT, 0, BLEN, HT + .15, BWID, M.roof, NC);
-  LB(-.02, HT, -.02, BLEN + .02, HT + .9, .15, M.wallDark); LB(-.02, HT, BWID - .15, BLEN + .02, HT + .9, BWID + .02, M.wallDark);
-  LB(-.02, HT, 0, .15, HT + .9, BWID, M.wallDark); LB(BLEN - .15, HT, 0, BLEN + .02, HT + .9, BWID, M.wallDark);
   // jardins privativos do térreo (cerca viva + divisórias entre apartamentos)
   for (const [h0, h1, p0, p1] of [[-1.6, -1.1, -1.1, 0], [BWID + 1.1, BWID + 1.6, BWID, BWID + 1.1]]) {
     LB(0, 0, h0, BLEN, .85, h1, M.hedge);
     const [ax, az] = toLot(0, h0), [bx, bz] = toLot(BLEN, h1); addColl(ax, az, bx, bz);
     for (let a = UNIT; a < BLEN - .1; a += UNIT) LB(a - .1, 0, p0, a + .1, .85, p1, M.hedge, NC);
   }
-  // placas dos blocos e arandelas nas entradas da circulação
-  const mid = ROW + COR / 2;
-  const [s0x, s0z] = toLot(-.03, mid), [s1x, s1z] = toLot(BLEN + .03, mid);
-  SIGN('BLOCO ' + b.blocks[0], s0x, 2.45, s0z, 2.2, .55, HD ? 'nx' : 'nz');
-  SIGN('BLOCO ' + b.blocks[1], s1x, 2.45, s1z, 2.2, .55, HD ? 'px' : 'pz');
+  // arandelas nas pontas da faixa de entrada
   for (const a of [-.12, BLEN + .02]) for (const c of [ROW - .45, ROW + COR + .3]) {
     LB(a, 2.1, c, a + .1, 2.35, c + .15, M.bulb, NC);
     const [lx, lz] = toLot(a, c); LAMPS.push({ x: lx, y: 2.1, z: lz, small: true });
   }
   // colisão: fileiras e núcleos
   for (const [c0, c1] of ROWS) { const [ax, az] = toLot(0, c0), [bx, bz] = toLot(BLEN, c1); addColl(ax, az, bx, bz); }
-  for (const c0 of cores) { const [ax, az] = toLot(c0, ROW), [bx, bz] = toLot(c0 + 3, ROW + COR); addColl(ax, az, bx, bz); }
+  { const [ax, az] = toLot(CORES[0][0], ROW), [bx, bz] = toLot(CORES[1][1], ROW + COR); addColl(ax, az, bx, bz); }   // núcleos + vão do meio
 }
 
 // ---------- caminhos principais ----------
