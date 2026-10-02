@@ -78,6 +78,8 @@ function makeTextures() {
   T.hammock = canvasTex(128, 128, (g) => { const c = ['#e2783a', '#f0c23c', '#3f86c4', '#f4eee6']; for (let y = 0; y < 16; y++) { g.fillStyle = c[y % 4]; g.fillRect(0, y * 8, 128, 8); } }, 1);
   T.pingpong = canvasTex(256, 128, (g) => { g.fillStyle = '#24599f'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#f2f2f2'; g.fillRect(0, 0, 256, 4); g.fillRect(0, 124, 256, 4); g.fillRect(0, 0, 4, 128); g.fillRect(252, 0, 4, 128); g.fillRect(0, 62, 256, 3); });
   T.slats = canvasTex(256, 256, (g) => { g.fillStyle = '#ecebe6'; g.fillRect(0, 0, 256, 256); g.fillStyle = '#c9c7c0'; for (let y = 0; y < 256; y += 24) g.fillRect(0, y, 256, 5); }, 1);
+  // sombra difusa (contato) embaixo dos carros: só a sombra borrada de um retângulo
+  T.carShadow = canvasTex(128, 64, (g) => { g.shadowColor = 'rgba(0,0,0,1)'; g.shadowBlur = 12; g.shadowOffsetX = 1000; g.fillStyle = '#000'; g.fillRect(18 - 1000, 13, 92, 38); }, 1, false);
   return T;
 }
 
@@ -113,15 +115,18 @@ function makeMaterials() {
     leafYellow: std({ color: '#e0b72e', roughness: .9, flatShading: true }), leafPalm: std({ color: '#5f9a3e', roughness: .9, flatShading: true }),
     leafPink: std({ color: '#c23b84', roughness: .9, flatShading: true }),
     bulb: std({ color: '#fff4dc', emissive: '#ffd590', emissiveIntensity: .2 }),
-    carGlass: std({ color: '#26323d', roughness: .1, metalness: .5 }), headlight: std({ color: '#fffbe8', emissive: '#fff2c4', emissiveIntensity: .2 }),
+    carGlass: std({ color: '#34424f', roughness: .05, metalness: .72 }), headlight: std({ color: '#fffbe8', emissive: '#fff2c4', emissiveIntensity: .2 }),
     taillight: std({ color: '#b3231f', emissive: '#ff2a1f', emissiveIntensity: .1 }),
     cloth: tex(TX.cloth, { roughness: .9 }), hammock: tex(TX.hammock, { roughness: .9 }), pingpong: tex(TX.pingpong, { roughness: .6 }),
     lounger: tex(TX.slats, { roughness: .7 }),
     bars: alpha(TX.bars), chain: alpha(TX.chain), railing: alpha(TX.railing), net: alpha(TX.net), cobogo: alpha(TX.cobogo),
+    carShadow: new THREE.MeshBasicMaterial({ map: TX.carShadow, color: '#000000', transparent: true, opacity: .62, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    plate: std({ color: '#f3f3ef', roughness: .45 }),
     glowPool: new THREE.MeshBasicMaterial({ map: TX.glow, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffffff' }),
   };
   for (const k of ['cloth', 'hammock', 'pingpong']) M[k].userData.noProject = true;
   M.glowPool.userData.noProject = true;
+  M.carShadow.userData.noProject = true;
 }
 // placas com texto
 const _signs = new Map();
