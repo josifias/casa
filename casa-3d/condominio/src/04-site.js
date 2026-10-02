@@ -109,6 +109,14 @@ function genGuarita() {
 
 // ---------- prédios ----------
 // Fileira norte (c 0..4,8) e sul (c 7,6..12,4) com 4 apartamentos de 7,6 m; circulação no meio.
+// Gardens (área privativa descoberta, 15,10 m²) das unidades térreas, conforme o memorial:
+// nos blocos 01, 02, 07–10 e 13–16 as quatro unidades têm garden; nos demais, só estas
+const GARDENS = { '03': [3, 4], '04': [1, 2], '05': [1, 2], '11': [1, 2], '06': [3, 4], '12': [3, 4] };
+// número da unidade (01–04) de cada apartamento da fileira, na ordem do eixo do prédio (como no masterplan)
+const UNIT_NUM = { h: [[4, 3, 2, 1], [1, 2, 3, 4]], v: [[1, 2, 3, 4], [4, 3, 2, 1]] };
+function hasGarden(b, row, u) {
+  return (GARDENS[b.blocks[u < 2 ? 0 : 1]] || [1, 2, 3, 4]).includes(UNIT_NUM[b.dir][row][u]);
+}
 function genBuilding(b, R) {
   const r = bRect(b), HD = b.dir === 'h', F = b.floors, HT = F * FLOOR_H;
   const LB = (a0, y0, c0, a1, y1, c1, mat, o) => HD ? B(r.x0 + a0, y0, r.z0 + c0, r.x0 + a1, y1, r.z0 + c1, mat, o) : B(r.x0 + c0, y0, r.z0 + a0, r.x0 + c1, y1, r.z0 + a1, mat, o);
@@ -142,9 +150,12 @@ function genBuilding(b, R) {
     for (let u = 0; u < 4; u++) {
       const ua = u * UNIT, mir = u % 2 === 1;
       const span = (a0, a1) => mir ? [ua + UNIT - a1, ua + UNIT - a0] : [ua + a0, ua + a1];
-      for (const outer of [FACES[0], FACES[3]]) {
-        const litSala = R() < .35;
-        for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) { const [p0, p1] = span(a0, a1); win(outer, p0, p1, yb + 1, yb + 2.2, sala ? litSala : R() < .3); }
+      for (const [outer, row] of [[FACES[0], 0], [FACES[3], 1]]) {
+        const litSala = R() < .35, porta = k === 0 && hasGarden(b, row, u);
+        for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) {
+          const [p0, p1] = span(a0, a1);
+          win(outer, p0, p1, yb + (sala && porta ? .15 : 1), yb + 2.2, sala ? litSala : R() < .3);
+        }
       }
       for (const inner of [FACES[1], FACES[2]]) { const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); }
     }
@@ -193,12 +204,32 @@ function genBuilding(b, R) {
     LB(-.05, HT + PH, c0 + .21, .21, HT + PH + .07, c1 - .21, M.wallDark, NC); LB(BLEN - .21, HT + PH, c0 + .21, BLEN + .05, HT + PH + .07, c1 - .21, M.wallDark, NC);
     for (const a of [UNIT, 2 * UNIT, 3 * UNIT]) LB(a - .08, HT, c0 + .18, a + .08, HT + .45, c1 - .18, M.wall, NC);
   }
-  // jardins privativos do térreo (cerca viva + divisórias entre apartamentos)
-  for (const [h0, h1, p0, p1] of [[-1.6, -1.1, -1.1, 0], [BWID + 1.1, BWID + 1.6, BWID, BWID + 1.1]]) {
-    LB(0, 0, h0, BLEN, .85, h1, M.hedge);
-    const [ax, az] = toLot(0, h0), [bx, bz] = toLot(BLEN, h1); addColl(ax, az, bx, bz);
-    for (let a = UNIT; a < BLEN - .1; a += UNIT) LB(a - .1, 0, p0, a + .1, .85, p1, M.hedge, NC);
-  }
+  // gardens do térreo: calçadinha junto à parede, grama até 1,90 m, mureta com gradil na borda e nas divisas
+  const GD = 2.0, PAV = .6;
+  ROWS.forEach(([c0, c1], row) => {
+    const cf = row === 0 ? c0 : c1, out = row === 0 ? -1 : 1;
+    const band = (d0, d1) => out < 0 ? [cf - d1, cf - d0] : [cf + d0, cf + d1];
+    { const [q0, q1] = band(0, PAV); LB(0, 0, q0, BLEN, .07, q1, M.paving, NC); }
+    { const [q0, q1] = band(0, 3.3), [x0, z0] = toLot(-.5, q0), [x1, z1] = toLot(BLEN + .5, q1); occ(Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1)); }
+    const fence = (a0, a1, e0, e1) => {   // mureta de 30 cm + gradil até 1,10 m
+      LB(a0, 0, e0, a1, .3, e1, M.wall, NC);
+      const m = (e0 + e1) / 2, w = Math.abs(a1 - a0) > Math.abs(e1 - e0);
+      if (w) LB(a0, .3, m - .01, a1, 1.1, m + .01, M.railing, NC); else LB((a0 + a1) / 2 - .01, .3, e0, (a0 + a1) / 2 + .01, 1.1, e1, M.railing, NC);
+    };
+    for (let u = 0; u < 4; u++) {
+      if (!hasGarden(b, row, u)) continue;
+      const a0 = u * UNIT, a1 = a0 + UNIT, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
+      fence(a0, a1, e0, e1);
+      fence(a0 - .07, a0 + .07, g0, g1);
+      if (u === 3 || !hasGarden(b, row, u + 1)) fence(a1 - .07, a1 + .07, g0, g1);
+      const [x0, z0] = toLot(a0, g0), [x1, z1] = toLot(a1, g1); addColl(x0, z0, x1, z1);
+      // umas plantas em alguns gardens
+      for (let i = 0; i < 2; i++) if (R() < .45) {
+        const [px, pz] = toLot(a0 + .6 + R() * (UNIT - 1.2), cf + out * (GD - .45));
+        SP(px, .3, pz, .3 + R() * .2, R() < .25 ? M.leafPink : M.leafDark, { ico: true, sy: .8 });
+      }
+    }
+  });
   // arandelas nas pontas da faixa de entrada
   for (const a of [-.12, BLEN + .02]) for (const c of [ROW - .45, ROW + COR + .3]) {
     LB(a, 2.1, c, a + .1, 2.35, c + .15, M.bulb, NC);
@@ -213,8 +244,8 @@ function genBuilding(b, R) {
 function genPaths() {
   const P = (x0, z0, x1, z1) => { flat(x0, z0, x1, z1, M.paving, .05); occ(x0, z0, x1, z1); };
   P(2, 34, 5, 75); P(2, 89, 5, 127); P(0, 89, 2, 91);
-  P(2, 34, 32, 36); P(2, 53, 41, 55);
+  P(2, 34, 32, 36);
   P(77, 3, 79, 106); P(75, 106, 77, 127);
   P(58, 5, 79, 7); P(58, 5, 60, 75);
-  P(1, 106, 77, 108); P(38, 89, 43, 125); P(1, 125, 79, 127);
+  P(75, 105, 79, 107); P(38, 89, 43, 125);
 }
