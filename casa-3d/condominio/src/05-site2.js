@@ -224,6 +224,96 @@ function tableSet(x, z) {
   addColl(x - .6, z - .6, x + .6, z + .6);
 }
 
+// ---------- salão de festas (planta do masterplan + perspectiva da revista) ----------
+// Térreo de 11 × 7,4 m: salão aberto (vãos sem vidro, cantos arredondados) a oeste e,
+// a leste, o bloco de serviço (banheiros e depósito) com a copa encostada nele.
+const SAL = { x: 15.3, z: 25.8, w: 11, d: 7.4, h: 3 };
+// parede com vãos que começam no piso (cantos de cima arredondados), extrudada na espessura t
+function wallWithOpenings(len, h, t, ops) {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0);
+  for (const [a, b, oh, r] of ops) {
+    s.lineTo(a, 0); s.lineTo(a, oh - r);
+    if (r > 0) s.absarc(a + r, oh - r, r, Math.PI, Math.PI / 2, true);
+    s.lineTo(b - r, oh);
+    if (r > 0) s.absarc(b - r, oh - r, r, Math.PI / 2, 0, true);
+    s.lineTo(b, 0);
+  }
+  s.lineTo(len, 0); s.lineTo(len, h); s.lineTo(0, h);
+  const g = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false, curveSegments: 6 });
+  g.translate(0, 0, -t / 2);
+  return g;
+}
+function salaoTable(x, z) {
+  const top = C('#c9a27a', .6), chair = C('#2b2b2e', .55);
+  CY(x, .73, z, .5, .77, top, { seg: 22 }); CY(x, 0, z, .05, .73, M.metal, { seg: 8 }); CY(x, 0, z, .25, .03, M.metal, { seg: 14 });
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2 + Math.PI / 4, g = G(x + Math.cos(a) * .78, 0, z + Math.sin(a) * .78, -a + Math.PI / 2);
+    within(g, () => {
+      RB(-.22, .42, -.21, .22, .47, .19, .02, chair, { seg: 1 });
+      RB(-.22, .5, .16, .22, .82, .2, .02, chair, { seg: 1 });
+      for (const [lx, lz] of [[-.19, -.18], [.17, -.18], [-.19, .15], [.17, .15]]) B(lx, 0, lz, lx + .025, .43, lz + .025, chair);
+    });
+  }
+  addColl(x - .55, z - .55, x + .55, z + .55);
+}
+function genSalao() {
+  const { x: X, z: Z, w: W, d: D, h: H } = SAL, t = .15, HALL = 7.4;   // salão: u 0–7,4; serviço: u 7,4–11
+  const wall = std({ map: TX.plaster, color: '#c6bbad', roughness: .95 });
+  const U = (u0, y0, v0, u1, y1, v1, mat, o) => B(X + u0, y0, Z + v0, X + u1, y1, Z + v1, mat, o);
+  // piso externo e porcelanato claro do salão
+  flat(15.05, 24.4, 27.6, 33.98, M.paving, .055);
+  U(0, 0, 0, HALL, .1, D, C('#d6d2ca', .55), { cast: false });
+  // paredes do salão com os vãos (norte, oeste e sul), como na planta
+  const place = (g, along, u, v) => {
+    if (along === 'x') g.translate(X + u, 0, Z + v); else { g.rotateY(-Math.PI / 2); g.translate(X + u, 0, Z + v); }
+    projectUV(g, wall); addMesh(g, wall);
+  };
+  place(wallWithOpenings(7.5, H, t, [[.8, 2.9, 2.5, .4], [4.1, 6.5, 2.5, .4]]), 'x', 0, t / 2);
+  place(wallWithOpenings(D, H, t, [[2.5, 4.9, 2.5, .4]]), 'z', t / 2, 0);
+  place(wallWithOpenings(HALL, H, t, [[.8, 6.5, 2.5, .4]]), 'x', 0, D - t / 2);
+  for (const [u0, v0, u1, v1] of [[0, 0, .8, t], [2.9, 0, 4.1, t], [6.5, 0, 7.5, t], [0, 0, t, 2.5], [0, 4.9, t, D], [0, D - t, .8, D], [6.5, D - t, HALL, D]]) addColl(X + u0, Z + v0, X + u1, Z + v1);
+  // bloco de serviço (banheiros, depósito) com portas
+  U(HALL, 0, 1.5, W, H, D, wall); U(9, 0, 0, W, H, 1.5, wall);
+  addColl(X + HALL, Z + 1.5, X + W, Z + D); addColl(X + 9, Z, X + W, Z + 1.5);
+  const door = (u0, v0, u1, v1) => { U(u0 - .05, 0, v0 - .05, u1 + .05, 2.16, v1 + .05, M.frame, NC); U(u0, 0, v0, u1, 2.1, v1, M.door, NC); };
+  door(7.6, 1.46, 8.4, 1.5); door(8.96, .3, 9, 1.1); door(W, 3.7, W + .04, 4.9); door(7.9, D, 9.1, D + .04);
+  // laje com beiral, platibanda e forro branco com plafons quadrados
+  U(-.25, H, -.25, W + .25, H + .55, D + .25, wall);
+  // forro branco (leve emissão para não ficar bege na sombra) e plafons de LED
+  const ceil = std({ color: '#f4f2ee', roughness: .9, emissive: '#ffffff', emissiveIntensity: .18 });
+  const plaf = std({ color: '#ffffff', roughness: .5, emissive: '#fff4e0', emissiveIntensity: .9 });
+  U(t, H - .02, t, HALL, H, D - t, ceil, NC);
+  for (const [u, v] of [[1.8, 1.8], [4.6, 1.8], [1.8, 5.3], [4.6, 5.3], [8.2, .75]]) {
+    U(u - .3, H - .06, v - .3, u + .3, H - .02, v + .3, plaf, NC);
+    LAMPS.push({ x: X + u, y: H - .3, z: Z + v, small: true });
+  }
+  // copa encostada no bloco de serviço: armários de madeira, bancada, ripado, geladeira
+  const woodLight = C('#c8a479', .7), stone = C('#c4c4c1', .4), dark = C('#4a4a4d', .6);
+  U(6.8, 0, 3.0, HALL, .86, 6.4, woodLight); U(6.77, .86, 2.98, HALL, .9, 6.42, stone, NC);
+  U(6.9, .9, 4.2, 7.3, .92, 4.7, dark, NC); U(6.9, .9, 5.4, 7.3, .92, 5.9, M.black, NC);
+  U(7.37, .9, 3.0, HALL, 1.5, 6.4, dark, NC);
+  U(7.05, 1.55, 3.0, HALL, 2.25, 5.1, woodLight);
+  for (let v = 5.15; v < 6.4; v += .09) U(7.33, 1.0, v, HALL - .01, 2.6, v + .045, woodLight, NC);
+  U(7.05, 1.6, 5.15, HALL, 1.63, 6.4, woodLight, NC); U(7.05, 2.05, 5.15, HALL, 2.08, 6.4, woodLight, NC);
+  U(6.75, 0, 2.3, HALL, 1.75, 2.95, C('#e9e9e7', .3, .2));
+  addColl(X + 6.75, Z + 2.3, X + HALL, Z + 6.4);
+  // bancada alta com banquetas
+  U(5.6, 0, 3.4, 6.05, 1.02, 5.9, dark); U(5.5, 1.02, 3.35, 6.1, 1.07, 5.95, stone, NC);
+  addColl(X + 5.5, Z + 3.35, X + 6.1, Z + 5.95);
+  for (const v of [3.9, 4.65, 5.4]) { CY(X + 5.22, .7, Z + v, .17, .76, M.black, { seg: 14 }); CY(X + 5.22, 0, Z + v, .025, .7, M.metal, { seg: 6 }); CY(X + 5.22, 0, Z + v, .16, .02, M.metal, { seg: 12 }); }
+  // mesas redondas com cadeiras pretas
+  for (const [u, v] of [[1.5, 1.6], [3.9, 1.6], [1.5, 4.2], [3.9, 4.6], [4.3, 6.4]]) salaoTable(X + u, Z + v);
+  // vasos com plantas dentro e floreiras do lado de fora (sul)
+  for (const [u, v] of [[.5, .5], [6.3, .5], [.5, 6.9]]) { CY(X + u, 0, Z + v, .2, .45, M.terracotta, { rTop: .24, seg: 12 }); SP(X + u, .85, Z + v, .38, M.leafDark, { ico: true, sy: 1.2 }); }
+  for (const [u0, u1] of [[-.2, .9], [2.9, 4.3], [6.5, 7.8], [9.2, 11]]) {
+    U(u0, 0, D + .3, u1, .4, D + .75, M.concrete);
+    for (let u = u0 + .3; u < u1 - .1; u += .45) SP(X + u, .5, Z + D + .52, .26, M.leafDark, { ico: true, sy: .8 });
+    addColl(X + u0, Z + D + .3, X + u1, Z + D + .75);
+  }
+  occ(14.8, 24.2, 27.8, 34.2);
+}
+
 // ---------- lazer ----------
 function genLeisure() {
   // casa de bombas, apoio/área técnica e caixa d'água
@@ -282,21 +372,7 @@ function genLeisure() {
   for (const [x0, z0, x1, z1] of [[20, 10, 30, 10.03], [20, 18.97, 24, 19], [26, 18.97, 30, 19], [20, 10, 20.03, 19], [29.97, 10, 30, 19]]) { B(x0, 0, z0, x1, 1, z1, M.railing, NC); addColl(x0, z0, x1, z1); }
   occ(20, 10, 30, 19);
 
-  // salão de festas (vidro + pilares)
-  flat(16, 21, 30, 33, M.terracotta, .08);
-  const pil = [];
-  for (let x = 16; x <= 30.01; x += 3.5) pil.push([x, 21], [x, 33]);
-  for (let z = 24.5; z < 33; z += 3.5) pil.push([16, z], [30, z]);
-  for (const [x, z] of pil) { B(x - .15, 0, z - .15, x + .15, 2.9, z + .15, M.white); }
-  B(16, 0, 20.98, 30, 2.9, 21.02, M.clearGlass, NC); B(15.98, 0, 21, 16.02, 2.9, 33, M.clearGlass, NC); B(29.98, 0, 21, 30.02, 2.9, 33, M.clearGlass, NC);
-  B(16, 0, 32.98, 24, 2.9, 33.02, M.clearGlass, NC); B(26, 0, 32.98, 30, 2.9, 33.02, M.clearGlass, NC); B(24, 2.2, 32.98, 26, 2.9, 33.02, M.clearGlass, NC);
-  B(15.6, 2.9, 20.6, 30.4, 3.2, 33.4, M.white); B(15.58, 3.0, 20.58, 30.42, 3.25, 33.42, M.wallDark, NC);
-  B(18, 0, 21.3, 28, .92, 21.9, M.white); B(18, .92, 21.3, 28, .96, 21.9, C('#2b2b2e', .3));
-  for (const x of [19.5, 23.5, 27]) for (const z of [25.3, 29.6]) tableSet(x, z);
-  for (const [x, z] of [[19.5, 25.3], [27, 25.3], [19.5, 29.6], [27, 29.6]]) { CY(x, 2.75, z, .25, 2.9, M.bulb, { seg: 12, cast: false }); LAMPS.push({ x, y: 2.6, z, small: true }); }
-  for (const [x0, z0, x1, z1] of [[16, 20.9, 30, 21.1], [15.9, 21, 16.1, 33], [29.9, 21, 30.1, 33], [16, 32.9, 24, 33.1], [26, 32.9, 30, 33.1]]) addColl(x0, z0, x1, z1);
-  SIGN('SALÃO DE FESTAS', 25, 2.6, 33.05, 2.6, .45, 'pz', '#3c3c40');
-  occ(15.5, 20.5, 30.5, 33.5);
+  genSalao();
 }
 
 // ---------- área técnica, bicicletário, redário e piquenique ----------

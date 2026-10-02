@@ -260,7 +260,7 @@ function buildMinimap() {
   rect(31, 1, 52, 31, '#b9ad98');                                            // área técnica
   rect(1, 2, 23, 9, '#e9e2d6'); rect(5, 11, 13, 18, '#5a6f8f'); rect(15, 11, 20, 18, '#e9e2d6');
   rect(2, 19, 10, 34, '#e7e1d6'); rect(3, 20, 9, 33, '#4fb3d9');               // piscina
-  rect(10, 19, 15, 34, '#c49a6c'); rect(16, 21, 30, 33, '#f4f1ea'); rect(21, 11, 30, 19, '#e2a15a');
+  rect(10, 19, 15, 34, '#c49a6c'); rect(15.3, 25.8, 26.3, 33.2, '#f4f1ea'); rect(21, 11, 30, 19, '#e2a15a');
   rect(53, 8, 58, 31, '#cfc6b6'); rect(38, 104, 43, 110, '#c8754e'); rect(38, 117, 43, 124, '#c8754e'); rect(77, 110, 81, 123, '#d8c59a');
   rect(1.2, 83, 5.2, 87.5, '#f4f1ea');                                       // guarita
   for (const b of BUILDINGS) {

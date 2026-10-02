@@ -43,7 +43,7 @@ const SPOTS = [
   { nome: 'Guarita', x: 3.5, z: 85.5 },
   { nome: 'Piscina', x: 5.5, z: 26 },
   { nome: 'Solarium', x: 12, z: 27 },
-  { nome: 'Salão de festas', x: 22.5, z: 26.5 },
+  { nome: 'Salão de festas', x: 19.5, z: 29.5 },
   { nome: 'Apoio do salão', x: 17, z: 14 },
   { nome: 'Playground', x: 25, z: 14.5 },
   { nome: 'Espaço fitness', x: 8.5, z: 14 },
@@ -62,7 +62,7 @@ const PLACES = [
   { id: 'portaria', nome: 'Portaria', icon: 'gate', pos: [-2, 78.5], look: [20, 78.5] },
   { id: 'estacionamento', nome: 'Estaciona-mento', icon: 'car', pos: [12, 82], look: [49, 62] },
   { id: 'piscina', nome: 'Piscina', icon: 'pool', pos: [12, 19.6], look: [5, 28] },
-  { id: 'salao', nome: 'Salão de festas', icon: 'party', pos: [25, 32], look: [21.5, 22.5] },
+  { id: 'salao', nome: 'Salão de festas', icon: 'party', pos: [16.3, 32.7], look: [22, 27.4] },
   { id: 'playground', nome: 'Playground', icon: 'slide', pos: [25, 20.4], look: [25, 13] },
   { id: 'fitness', nome: 'Fitness', icon: 'gym', pos: [13.6, 14], look: [6, 14] },
   { id: 'praca', nome: 'Praça', icon: 'tree', pos: [40.5, 99], look: [40.5, 107] },
@@ -89,7 +89,7 @@ const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 // Em que lugar o jogador está (para a legenda do mapa)
 const AREAS = [
   ['Portaria', -4, 68, 7, 91], ['Piscina', 2, 19, 15, 34.5], ['Espaço fitness', 4.5, 10.5, 13.5, 18.5],
-  ['Apoio do salão', 14.5, 10.5, 20.5, 18.5], ['Playground', 20.5, 10.5, 30.5, 19.5], ['Salão de festas', 15.5, 20.5, 30.5, 33.5],
+  ['Apoio do salão', 14.5, 10.5, 20.5, 18.5], ['Playground', 20.5, 10.5, 30.5, 19.5], ['Salão de festas', 15, 24.2, 27.8, 34],
   ['Área técnica', 31, 1, 52, 31], ['Bicicletário', 53, 8, 58.5, 31], ['Redário', 54, 0, 65, 7.5], ['Piquenique', 65, 0, 78, 7.5],
   ['Praça', 37, 103, 44, 111], ['Praça de jogos', 37, 116, 44, 125], ['Pet place', 76.5, 109.5, 81.5, 123.5],
   ['Estacionamento', 1, 75, 80, 89], ['Estacionamento', 41, 31, 58, 75],
