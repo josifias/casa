@@ -1,22 +1,38 @@
-# Apartamento 3D · 2 quartos
+# Viva Vida Sul em 3D · apartamento e condomínio
 
-Passeio 3D interativo, feito no navegador, de um apartamento tipo de 2 quartos (36,24 m²) do empreendimento Viva Vida Sul — maquete com corte, planta com medidas, e um passeio em primeira pessoa por todos os cômodos. Dois estilos de decoração alternáveis, ciclo dia/noite, planta espelhável e portas animadas (incluindo uma porta de correr).
+Dois passeios 3D interativos, feitos no navegador:
 
-**[Ver demo ao vivo](#)** — link do Vercel
+- **Apartamento** (`/`) — apartamento tipo de 2 quartos (36,24 m²): maquete com corte, planta com medidas e passeio em primeira pessoa por todos os cômodos. Dois estilos de decoração, dia/noite, planta espelhável e portas animadas (incluindo uma porta de correr).
+- **Condomínio** (`/condominio/`) — o condomínio inteiro: 16 blocos, portaria, estacionamento, piscina, salão de festas, playground, fitness, praças, redário e pet place. Vista aérea, planta e passeio a pé com colisão, dia/noite, minimapa clicável e atalhos para cada área.
 
-> Ilustração 3D independente, feita a partir da planta de divulgação pública do empreendimento. **Não é material oficial da construtora.** Móveis, decoração e acabamentos mostrados não fazem parte do imóvel entregue — veja a ficha técnica dentro do próprio app.
+**[Ver ao vivo](https://casa-josifias.vercel.app)** · **[Condomínio](https://casa-josifias.vercel.app/condominio/)**
+
+> Ilustração 3D independente, feita a partir da planta e do masterplan de divulgação pública do empreendimento. **Não é material oficial da construtora.** Móveis, decoração e acabamentos mostrados não fazem parte do imóvel entregue — veja a ficha técnica dentro do próprio app.
 
 ## Tecnologia
 
-Página única (`index.html`), sem backend, sem build step em produção. Usa [Three.js](https://threejs.org/) via CDN ([jsDelivr](https://www.jsdelivr.com/), versão fixada) para toda a modelagem 3D — arquitetura, móveis e texturas são gerados por código, sem assets externos.
+Páginas únicas (`index.html` e `condominio/index.html`), sem backend, sem build step em produção. Usa [Three.js](https://threejs.org/) via CDN ([jsDelivr](https://www.jsdelivr.com/), versão fixada) para toda a modelagem 3D — arquitetura, móveis e texturas são gerados por código, sem assets externos.
 
 ## Estrutura
 
 ```
 casa-3d/
-├── index.html      ← arquivo publicado (gerado por build.py)
+├── index.html      ← apartamento publicado (gerado por build.py)
 ├── preview.jpg     ← miniatura para redes sociais / WhatsApp
-├── build.py        ← concatena src/*.js dentro de src/shell.html
+├── build.py        ← concatena src/*.js dentro de src/shell.html (as duas páginas)
+├── condominio/
+│   ├── index.html  ← condomínio publicado (gerado por build.py)
+│   ├── preview.jpg
+│   └── src/
+│       ├── shell.html     ← HTML, CSS e meta tags
+│       ├── 01-core.js     ← implantação: blocos, áreas, pontos do passeio
+│       ├── 02-textures.js ← texturas procedurais e materiais
+│       ├── 03-helpers.js  ← primitivas, placas, postes, colisão, fusão de geometrias
+│       ├── 04-site.js     ← chão, ruas, vizinhança, muro, portaria, prédios
+│       ├── 05-site2.js    ← lazer, estacionamento, praças, postes, árvores
+│       ├── 06-sky.js      ← céu, sol/lua, sombras, dia/noite
+│       ├── 07-player.js   ← caminhar, colisão, olhar, joystick
+│       └── 08-app.js      ← modos, minimapa, rótulos, interface, loop
 └── src/
     ├── shell.html      ← HTML, CSS e meta tags
     ├── 01-core.js      ← config, medidas, texturas procedurais
@@ -30,7 +46,7 @@ casa-3d/
 
 ## Desenvolvimento
 
-Edite os arquivos em `src/` e gere o `index.html`:
+Edite os arquivos em `src/` (apartamento) ou `condominio/src/` (condomínio) e gere as páginas:
 
 ```bash
 python build.py
@@ -52,6 +68,16 @@ python -m http.server 8000
 | `?espelho=1` | planta espelhada |
 | `?noite=1` | modo noturno |
 | `?debug=1` | mostra FPS e expõe `window.__casa` para inspeção |
+
+No condomínio:
+
+| Parâmetro | Efeito |
+|---|---|
+| `?modo=aerea\|planta\|passeio` | abre direto num modo |
+| `?local=portaria\|estacionamento\|piscina\|salao\|playground\|fitness\|praca\|jogos\|pet\|redario\|bicicletario\|blocos` | abre o passeio num ponto |
+| `?noite=1` | modo noturno |
+| `?preview=1` | enquadramento da miniatura, sem interface |
+| `?debug=1` | mostra FPS e expõe `window.__condo` para inspeção |
 
 ## Deploy
 

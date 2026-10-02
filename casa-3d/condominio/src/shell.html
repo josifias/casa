@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Condomínio 3D · Viva Vida Sul</title>
+<meta name="description" content="Passeio 3D ilustrativo pelo condomínio Viva Vida Sul: 16 blocos, piscina, salão de festas, playground e praças. Funciona no celular.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://casa-josifias.vercel.app/condominio/">
+<meta property="og:title" content="Condomínio Viva Vida Sul em 3D (ilustrativo)">
+<meta property="og:description" content="Ande pelo condomínio inteiro: blocos, piscina, salão de festas, playground e praças — de dia ou de noite, direto no celular.">
+<meta property="og:image" content="https://casa-josifias.vercel.app/condominio/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1f1c19">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg1:#9fc7ea; --bg2:#d6e8f3;
+  --glass:rgba(28,25,22,.72);
+  --line:rgba(255,255,255,.14); --txt:#f6f1ea; --muted:#c9bfb2;
+  --accent:#e0874f;
+  --radius:14px; --gap:10px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--txt);-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(180deg,var(--bg1),var(--bg2))}
+body.night{--bg1:#0b1022;--bg2:#1b2340}
+#app{position:fixed;inset:0;touch-action:none}
+#app canvas{display:block;width:100%;height:100%;outline:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+a.ib,a.thumb{color:inherit;text-decoration:none;cursor:pointer}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.top{position:fixed;left:0;right:0;top:0;padding:calc(10px + var(--safe-t)) 12px 0;display:flex;align-items:flex-start;gap:var(--gap);pointer-events:none;z-index:5}
+.brand{pointer-events:auto;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:8px 12px;min-width:0}
+.brand h1{margin:0;font-size:15px;font-weight:650;letter-spacing:.2px;white-space:nowrap}
+.brand p{margin:2px 0 0;font-size:12px;color:var(--muted);white-space:nowrap}
+.tools{margin-left:auto;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.ib{height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);font-size:13px;font-weight:600;transition:background .2s}
+.ib:hover{background:rgba(50,45,40,.85)}
+.ib[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:#1d1510}
+.ib .lbl{white-space:nowrap}
+
+.modes{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));display:flex;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:4px;z-index:5}
+.modes button{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.modes button[aria-selected="true"]{background:#f6f1ea;color:#221c16}
+
+.bottom{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(8px + var(--safe-b));z-index:5;pointer-events:none}
+.thumbs{pointer-events:auto;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 2px;margin:0 auto;max-width:max-content;scroll-snap-type:x proximity}
+.thumbs::-webkit-scrollbar{display:none}
+.thumb{scroll-snap-align:center;flex:0 0 auto;width:84px;height:74px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:600;color:#eee6db;transition:transform .15s,background .2s;text-align:center;line-height:1.1}
+.thumb svg{width:28px;height:28px;stroke-width:1.5}
+.thumb:hover{transform:translateY(-2px)}
+.thumb[aria-current="true"]{background:#f6f1ea;color:#221c16}
+.thumb.link{background:rgba(224,135,79,.85);color:#1d1510}
+.disc{pointer-events:auto;text-align:center;font-size:10.5px;color:rgba(20,30,45,.8);margin-top:2px;text-shadow:0 1px 0 rgba(255,255,255,.45)}
+body.night .disc{color:rgba(230,225,215,.65);text-shadow:none}
+.disc button{text-decoration:underline;font-size:inherit}
+
+.mini{position:fixed;right:12px;bottom:calc(108px + var(--safe-b));width:150px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:8px;z-index:4}
+.mini svg{display:block;width:100%;height:auto;cursor:crosshair}
+.mini .cap{font-size:11px;color:var(--muted);margin:0 2px 4px;display:flex;justify-content:space-between;gap:6px}
+.mini .cap b{color:var(--txt);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.lab{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;background:rgba(255,252,247,.92);color:#2a221b;border-radius:10px;padding:4px 8px;font-size:11.5px;font-weight:650;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;cursor:pointer}
+.lab.blk{background:#c0392b;color:#fff;font-size:11px;padding:3px 7px}
+.lab small{display:block;font-weight:500;color:#6d6258;font-size:10.5px}
+
+.joy{position:fixed;left:18px;bottom:calc(112px + var(--safe-b));width:112px;height:112px;border-radius:50%;background:rgba(28,25,22,.35);border:1px solid rgba(255,255,255,.35);z-index:4;display:none;touch-action:none}
+.joy i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+body.walk.touch .joy{display:block}
+
+.hint{position:fixed;left:50%;top:calc(116px + var(--safe-t));transform:translateX(-50%);background:rgba(28,25,22,.78);padding:8px 14px;border-radius:999px;font-size:12.5px;z-index:6;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+.hint.on{opacity:1}
+
+.modal{position:fixed;inset:0;background:rgba(10,8,6,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal.on{display:flex}
+.card{background:#fbf8f3;color:#2a221b;border-radius:18px;max-width:580px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;padding:20px 20px 16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.card h2{margin:0 0 4px;font-size:19px}
+.card h3{margin:16px 0 6px;font-size:14px;color:#9a5a32;text-transform:uppercase;letter-spacing:.5px}
+.card p,.card li{font-size:13.5px;line-height:1.5;color:#43392f}
+.card ul{padding-left:18px;margin:6px 0}
+.card table{width:100%;border-collapse:collapse;font-size:13.5px}
+.card td{padding:6px 4px;border-bottom:1px solid #ebe3d8}
+.card td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:#6b5f53}
+.card kbd{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid #d8cfc3;border-bottom-width:2px;border-radius:5px;background:#fff;font:600 12px ui-monospace,monospace;text-align:center}
+.card .close{float:right;width:34px;height:34px;border-radius:10px;background:#efe7dc;color:#2a221b;font-size:18px}
+.card .note{background:#f3ebe0;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#5b4f44}
+
+#loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(180deg,#9fc7ea,#d6e8f3);color:#1f2a38;z-index:30;transition:opacity .5s}
+#loader.off{opacity:0;pointer-events:none}
+#loader .sp{width:42px;height:42px;border-radius:50%;border:4px solid rgba(31,42,56,.2);border-top-color:#c46a3a;animation:rot 1s linear infinite}
+#loader b{font-size:15px}
+#loader small{font-size:12px;opacity:.75;max-width:300px;text-align:center}
+@keyframes rot{to{transform:rotate(360deg)}}
+#fps{position:fixed;left:8px;bottom:8px;z-index:40;font:12px monospace;background:#000a;color:#0f0;padding:3px 6px;border-radius:4px;display:none}
+
+body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint{display:none!important}
+
+@media (max-width:720px){
+  .brand{padding:6px 10px}
+  .brand h1{font-size:13.5px}
+  .brand p{font-size:11px}
+  .ib{height:38px;min-width:38px;padding:0 8px}
+  .ib .lbl{display:none}
+  .modes{top:calc(60px + var(--safe-t))}
+  .modes button svg{display:none}
+  .thumb{width:72px;height:64px;font-size:10.5px}
+  .thumb svg{width:24px;height:24px}
+  .mini{width:92px;right:10px;top:calc(110px + var(--safe-t));bottom:auto;padding:5px}
+  .mini .cap{display:none}
+  .hint{top:auto;bottom:calc(104px + var(--safe-b))}
+  body:not(.walk) .mini{display:none}
+}
+@media (max-width:440px){
+  .brand .lg{display:none}
+  .tools{gap:5px}
+  .ib{height:36px;min-width:36px;padding:0 7px}
+  .modes{top:calc(56px + var(--safe-t))}
+  .modes button{padding:8px 10px;font-size:12px}
+  .mini{top:calc(104px + var(--safe-t))}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="labels"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1><span class="lg">Condomínio · </span>Viva Vida Sul</h1>
+    <p>16 blocos<span class="lg"> · 304 apartamentos</span> · 3D ilustrativo</p>
+  </div>
+  <div class="tools">
+    <a class="ib" id="bApto" href="../index.html" title="Ver o apartamento tipo por dentro"><svg class="i" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/></svg><span class="lbl">Apartamento</span></a>
+    <button class="ib" id="bNight" title="Dia / noite (tecla N)" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></svg><span class="lbl">Noite</span></button>
+    <button class="ib" id="bInfo" title="Ficha do condomínio e comandos"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
+    <button class="ib" id="bFull" title="Tela cheia"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</header>
+
+<nav class="modes" role="tablist">
+  <button role="tab" data-mode="aerea" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Vista aérea</button>
+  <button role="tab" data-mode="planta" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M11 4v7H3M11 15v5M15 11h6"/></svg>Planta</button>
+  <button role="tab" data-mode="passeio" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m9 21 2-6 3 3v3M14 18l-1-6-3 1-2 4M13 12l3 2 3-1"/></svg>Passeio</button>
+</nav>
+
+<div class="mini" id="mini"><div class="cap"><span>Mapa</span><b id="here">—</b></div><svg id="miniSvg"></svg></div>
+<div class="joy" id="joy"><i></i></div>
+<div class="hint" id="hint"></div>
+
+<footer class="bottom">
+  <div class="thumbs" id="thumbs"></div>
+  <div class="disc">Ilustração independente · sem vínculo com a construtora · <button id="bInfo2">saiba mais</button></div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="card">
+    <button class="close" id="mClose" aria-label="Fechar">×</button>
+    <h2 id="mTitle">Condomínio Viva Vida Sul</h2>
+    <p>Condomínio residencial com <b>16 blocos</b> e <b>304 apartamentos</b> de 2 quartos (36,24 m²), todos com 4 apartamentos por andar.</p>
+    <table>
+      <tr><td>Blocos 01 a 12</td><td>térreo + 4 andares</td></tr>
+      <tr><td>Blocos 13 a 16</td><td>térreo + 3 andares</td></tr>
+      <tr><td>Vagas de carro</td><td>77 (incl. PCD, idosos e visitantes)</td></tr>
+      <tr><td>Vagas de moto / bicicleta</td><td>11 / 112</td></tr>
+    </table>
+    <h3>Lazer</h3>
+    <ul>
+      <li>Piscina com prainha e solarium · espaço fitness</li>
+      <li>Salão de festas com apoio · playground</li>
+      <li>Praça, praça de jogos, piquenique, redário e pet place</li>
+      <li>Bicicletário · guarita com eclusa</li>
+    </ul>
+    <h3>Como navegar</h3>
+    <ul>
+      <li><b>Vista aérea:</b> arraste para girar, pinça/roda para zoom. Toque num bloco ou área para descer até lá.</li>
+      <li><b>Planta:</b> vista de cima com os nomes de cada bloco e área de lazer.</li>
+      <li><b>Passeio:</b> arraste para olhar em volta e toque no chão para andar. No computador, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas andam e <kbd>Shift</kbd> corre; no celular, use o joystick (empurre até a borda para correr).</li>
+      <li>As miniaturas embaixo levam direto à portaria, piscina, salão, playground, praças e demais áreas. <kbd>N</kbd> alterna dia e noite.</li>
+    </ul>
+    <p class="note">Visualização 3D ilustrativa, criada de forma independente a partir do masterplan de divulgação. <b>Não é material oficial da construtora.</b> Posições, cores e equipamentos são aproximados; mobiliário e paisagismo podem ser diferentes do entregue.</p>
+  </div>
+</div>
+
+<div id="loader"><div class="sp"></div><b>Montando o condomínio…</b><small>Na primeira vez pode levar alguns segundos no celular.</small></div>
+<div id="fps"></div>
+
+<script>window.__errors = []; addEventListener("error", (e) => window.__errors.push(String(e.message)));</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+/*__JS__*/
+</script>
+</body>
+</html>
