@@ -108,7 +108,7 @@ body.walk.touch .joy{display:block}
 @keyframes rot{to{transform:rotate(360deg)}}
 #fps{position:fixed;left:8px;bottom:8px;z-index:40;font:12px monospace;background:#000a;color:#0f0;padding:3px 6px;border-radius:4px;display:none}
 
-body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint{display:none!important}
+body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint,body.preview .music,body.preview .wa{display:none!important}
 
 @media (max-width:720px){
   .music{left:10px;top:calc(106px + var(--safe-t))}
@@ -202,6 +202,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
     <p>Desenvolvido por <b>Josifias Lima</b>. Dúvidas, sugestões ou quer um projeto assim? Fale comigo:</p>
     <p><a class="wa-btn" href="https://wa.me/5585998156542?text=Ol%C3%A1%2C%20Josifias%21%20Vi%20o%20passeio%203D%20do%20Viva%20Vida%20Sul%20e%20gostaria%20de%20falar%20com%20voc%C3%AA." target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6Z"/><path d="M9.2 8.6c.2-.5.6-.5.9-.5h.4c.2 0 .4.1.5.4l.6 1.4c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.4 1.9 2.5 2.5l.6-.5c.2-.2.4-.2.6-.1l1.4.6c.3.1.4.3.4.5v.4c0 .4-.1.8-.6 1-.8.4-2 .3-3.6-.8-1.5-1-2.6-2.4-3.1-3.6-.4-1.2-.2-2.1 0-2.5Z"/></svg>WhatsApp (85) 99815-6542</a></p>
     <p class="note">Visualização 3D ilustrativa, criada de forma independente a partir do masterplan de divulgação. <b>Não é material oficial da construtora.</b> Posições, cores e equipamentos são aproximados; mobiliário e paisagismo podem ser diferentes do entregue.</p>
+    <p class="note">Entorno (ruas, quadras e construções num raio de três quarteirões) gerado com dados do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© colaboradores do OpenStreetMap</a> (ODbL). Fachadas, cores, muros, árvores e carros do entorno são ilustrativos.</p>
     <p class="note">Música ambiente: <i>Gymnopédie nº 1</i> (Erik Satie), gravação de <a href="https://incompetech.com" target="_blank" rel="noopener">Kevin MacLeod</a>, licença <a href="https://creativecommons.org/licenses/by/3.0/deed.pt-br" target="_blank" rel="noopener">CC BY 3.0</a> (convertida para MP3 de 112 kbps).</p>
   </div>
 </div>
@@ -211,6 +212,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
 
 <script>window.__errors = []; addEventListener("error", (e) => window.__errors.push(String(e.message)));</script>
 <script src="../musica/musica.js" defer></script>
+<script src="bairro.js" defer></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",

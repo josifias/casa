@@ -3,7 +3,7 @@
 Dois passeios 3D interativos, feitos no navegador:
 
 - **Apartamento** (`/`) — apartamento tipo de 2 quartos (36,24 m²): maquete com corte, planta com medidas e passeio em primeira pessoa por todos os cômodos. Dois estilos de decoração, dia/noite, planta espelhável e portas animadas (incluindo uma porta de correr).
-- **Condomínio** (`/condominio/`) — o condomínio inteiro: 16 blocos, portaria, estacionamento, piscina, salão de festas, playground, fitness, praças, redário e pet place. Vista aérea, planta e passeio a pé com colisão, dia/noite, minimapa clicável e atalhos para cada área.
+- **Condomínio** (`/condominio/`) — o condomínio inteiro: 16 blocos, portaria, estacionamento, piscina, salão de festas, playground, fitness, praças, redário e pet place. Vista aérea, planta e passeio a pé com colisão, dia/noite, minimapa clicável e atalhos para cada área. Em volta, o **entorno real** num raio de três quarteirões para cada lado (ruas, calçadas, quadras, casas, postes com fiação, árvores e carros), gerado com dados do OpenStreetMap.
 
 **[Ver ao vivo](https://casa-josifias.vercel.app)** · **[Condomínio](https://casa-josifias.vercel.app/condominio/)**
 
@@ -12,6 +12,12 @@ Dois passeios 3D interativos, feitos no navegador:
 ## Música ambiente
 
 As duas páginas têm um botão **Música** (ou tecla `M`) que toca, em loop e com fade, a *Gymnopédie nº 1* (Erik Satie) na gravação de **Kevin MacLeod** ([incompetech.com](https://incompetech.com)), licenciada sob [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/). O arquivo `musica/gymnopedie-1.mp3` foi convertido do original do Wikimedia Commons para MP3 de 112 kbps (2,6 MB); o crédito também aparece na ficha de cada página. A música só começa depois de um toque/clique (regra dos navegadores) e a preferência fica salva no aparelho.
+
+## Entorno (OpenStreetMap)
+
+`condominio/bairro.js` é gerado por `condominio/tools/gerar_bairro.py` (precisa de `shapely`): o script baixa a área pela API do OpenStreetMap, encaixa o quarteirão real do terreno no modelo (rotação de 4,8° e escala de 1,04, a partir das quatro ruas que cercam o terreno no masterplan) e gera três quarteirões de entorno para cada lado. A altura dos prédios vem do nº de andares do OSM; onde o OSM não tem construção mapeada na frente das quadras entram casas ilustrativas. Ruas internas de condomínios fechados não são caminháveis. A pasta `tools/` fica fora do site (`.vercelignore`).
+
+Dados do entorno © [colaboradores do OpenStreetMap](https://www.openstreetmap.org/copyright), sob a licença ODbL 1.0; `condominio/bairro.js` é um banco de dados derivado e segue a mesma licença.
 
 ## Tecnologia
 
@@ -27,6 +33,8 @@ casa-3d/
 ├── condominio/
 │   ├── index.html  ← condomínio publicado (gerado por build.py)
 │   ├── preview.jpg
+│   ├── bairro.js   ← entorno real (gerado por tools/gerar_bairro.py a partir do OpenStreetMap)
+│   ├── tools/      ← gerador do entorno (não é publicado no site)
 │   └── src/
 │       ├── shell.html     ← HTML, CSS e meta tags
 │       ├── 01-core.js     ← implantação: blocos, áreas, pontos do passeio
@@ -34,6 +42,7 @@ casa-3d/
 │       ├── 03-helpers.js  ← primitivas, placas, postes, colisão, fusão de geometrias
 │       ├── 04-site.js     ← chão, ruas, vizinhança, muro, portaria, prédios
 │       ├── 05-site2.js    ← lazer, estacionamento, praças, postes, árvores
+│       ├── 05-site3.js    ← entorno: ruas, calçadas, quadras, casas, muros, postes e fiação
 │       ├── 06-sky.js      ← céu, sol/lua, sombras, dia/noite
 │       ├── 07-player.js   ← caminhar, colisão, olhar, joystick
 │       └── 08-app.js      ← modos, minimapa, rótulos, interface, loop

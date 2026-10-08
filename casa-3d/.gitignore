@@ -12,3 +12,6 @@ Thumbs.db
 # Ferramentas
 node_modules/
 .vercel
+
+# Download bruto do OpenStreetMap usado pelo gerador do entorno (regenerável)
+condominio/tools/area.osm

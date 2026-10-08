@@ -37,6 +37,7 @@ function initScene() {
   generateSite();
   T.push(performance.now());
   mergeGroup(site, 32);
+  if (BAIRRO_GROUP.children.length) { scene.add(BAIRRO_GROUP); mergeGroup(BAIRRO_GROUP, 260); }
   T.push(performance.now());
   buildSky(scene, renderer);
   buildGlows(scene);
@@ -48,7 +49,7 @@ function initScene() {
   controls.rotateSpeed = .6; controls.zoomSpeed = .9; controls.autoRotateSpeed = .35;
   controls.addEventListener('change', () => {
     const t = controls.target;
-    t.x = clamp(t.x, -10, LOT_W + 10); t.z = clamp(t.z, -10, LOT_D + 10); t.y = 0;
+    t.x = clamp(t.x, Math.min(-10, XMIN), Math.max(LOT_W + 10, XMAX)); t.z = clamp(t.z, Math.min(-10, ZMIN), Math.max(LOT_D + 10, ZMAX)); t.y = 0;
     invalidate();
   });
   controls.addEventListener('start', markInput);
@@ -92,11 +93,11 @@ function plantaPose() {
 function configControls(m) {
   controls.enabled = m !== 'passeio';
   if (m === 'aerea') {
-    Object.assign(controls, { enableRotate: true, enablePan: true, screenSpacePanning: false, minPolarAngle: .1, maxPolarAngle: 1.36, minDistance: 18, maxDistance: 340, minAzimuthAngle: -Infinity, maxAzimuthAngle: Infinity });
+    Object.assign(controls, { enableRotate: true, enablePan: true, screenSpacePanning: false, minPolarAngle: .1, maxPolarAngle: 1.36, minDistance: 18, maxDistance: BAIRRO ? 900 : 340, minAzimuthAngle: -Infinity, maxAzimuthAngle: Infinity });
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; controls.touches.ONE = THREE.TOUCH.ROTATE;
   } else if (m === 'planta') {
     const p = plantaPose();
-    Object.assign(controls, { enableRotate: false, enablePan: true, screenSpacePanning: true, minPolarAngle: 0, maxPolarAngle: .001, minDistance: 25, maxDistance: p.d * 1.5, minAzimuthAngle: p.theta, maxAzimuthAngle: p.theta });
+    Object.assign(controls, { enableRotate: false, enablePan: true, screenSpacePanning: true, minPolarAngle: 0, maxPolarAngle: .001, minDistance: 25, maxDistance: p.d * (BAIRRO ? 4 : 1.5), minAzimuthAngle: p.theta, maxAzimuthAngle: p.theta });
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN; controls.touches.ONE = THREE.TOUCH.PAN;
   }
 }
@@ -131,7 +132,8 @@ function goPlanta(instant = false) {
   else flyTo(p.pos, q, p.fov, 1.4, done);
 }
 function goWalk(x, z, lx, lz, instant = false, yawOverride = null) {
-  const f = freeNear(x, z) || [x, z];
+  const f = freeNear(x, z);
+  if (!f) return;
   const yaw = yawOverride ?? Math.atan2(-(lx - f[0]), -(lz - f[1]));
   const pitch = -.04, fov = IS_TOUCH && innerWidth < innerHeight ? 76 : 68;
   setMode('passeio');
@@ -208,6 +210,7 @@ const ICONS = {
   bike: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="m6 16 4-7h6l2 7M10 9l2.5 7H6M14 6h3"/>',
   bldg: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M11 21v-3h2v3"/>',
   home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/>',
+  road: '<path d="M7 3 4 21M17 3l3 18M12 4v2.5M12 10.5v3M12 17.5V20"/>',
 };
 const svgIcon = (k) => `<svg class="i" viewBox="0 0 24 24">${ICONS[k]}</svg>`;
 const cleanName = (n) => n.replace('-', '');
@@ -245,14 +248,19 @@ function updateThumbs() {
 
 // ---------- minimapa (norte para cima, 1 unidade = 1 m) ----------
 const SVGNS = 'http://www.w3.org/2000/svg';
-let miniMarker, lastHere = '';
+let miniMarker, lastHere = '', lastVB = '';
 function buildMinimap() {
   const svg = $('miniSvg');
   svg.innerHTML = '';
   svg.setAttribute('viewBox', '-5 -5 92 140');
   const el = (tag, attrs, text) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; svg.appendChild(e); return e; };
   const rect = (x0, z0, x1, z1, fill, extra = {}) => el('rect', { x: x0, y: z0, width: x1 - x0, height: z1 - z0, fill, ...extra });
-  rect(-5, -5, 87, 135, '#9a9690');
+  if (BAIRRO) {
+    // entorno: quadras, lagoa e ruas (o mapa acompanha o visitante quando ele sai do terreno)
+    for (const [green, p] of BAIRRO.blocks) el('path', { d: p.map((r) => 'M' + decRing(r).join(' ') + 'Z').join(''), fill: green ? '#a9c48f' : '#ddd3c2', 'fill-rule': 'evenodd' });
+    for (const p of BAIRRO.water) el('path', { d: p.map((r) => 'M' + decRing(r).join(' ') + 'Z').join(''), fill: '#7ec3e6', 'fill-rule': 'evenodd' });
+    for (const [w, d, r] of BAIRRO.lines) el('polyline', { points: decRing(r).join(' '), fill: 'none', stroke: d ? '#b9a07c' : '#8f8b86', 'stroke-width': w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+  } else rect(-5, -5, 87, 135, '#9a9690');
   rect(0, 0, 82, 130, '#7ea258', { rx: 1.5 });
   for (const p of [[2, 34, 5, 75], [2, 89, 5, 127], [0, 89, 2, 91], [2, 34, 32, 36], [77, 3, 79, 106], [75, 106, 77, 127], [75, 105, 79, 107], [58, 5, 79, 7], [58, 5, 60, 75], [38, 89, 43, 125]]) rect(...p, '#d9cfbf');
   rect(1, 75, 80, 89, '#6b6b6b'); rect(41, 31, 58, 75, '#6b6b6b');           // estacionamento
@@ -282,6 +290,9 @@ function updateMinimap() {
   else if (mode === 'passeio') { x = camera.position.x; z = camera.position.z; yaw = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ').y; }
   else { x = controls.target.x; z = controls.target.z; const d = camera.position.clone().sub(controls.target); yaw = Math.atan2(d.x, d.z); }
   miniMarker.setAttribute('transform', `translate(${x.toFixed(2)} ${z.toFixed(2)}) rotate(${(-yaw * 180 / Math.PI).toFixed(1)})`);
+  const out = BAIRRO && mode === 'passeio' && (x < -8 || x > LOT_W + 8 || z < -8 || z > LOT_D + 8);
+  const vb = out ? `${(x - 60).toFixed(1)} ${(z - 91).toFixed(1)} 120 183` : '-5 -5 92 140';
+  if (vb !== lastVB) { lastVB = vb; $('miniSvg').setAttribute('viewBox', vb); }
   const here = mode === 'passeio' ? placeName(x, z) : 'Vista geral';
   if (here !== lastHere) { lastHere = here; $('here').textContent = here; }
 }

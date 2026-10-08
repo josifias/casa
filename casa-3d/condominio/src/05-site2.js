@@ -66,7 +66,7 @@ function carGeo(type) {
   if (_carGeo[type]) return _carGeo[type];
   const T = CAR_TYPES[type], ra = T.r + .1, b = T.body, Wc = T.W - .26;
   const ext = (shape, depth, bev) => {
-    const g = new THREE.ExtrudeGeometry(shape, { depth: depth - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 8 });
+    const g = new THREE.ExtrudeGeometry(shape, { depth: depth - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2, curveSegments: 5 });
     g.translate(0, 0, -(depth - 2 * bev) / 2);
     return g;
   };
@@ -113,7 +113,7 @@ function carParts(type, T, Wc, ra, body, cabin, roof) {
       const xa = T.A[0][0] - .05, xc = T.Cp[0][0] + .05;
       OB([xa, carTopY(T.body, xa) + .012, s * (Wc / 2 + .02)], [xc, carTopY(T.body, xc) + .012, s * (Wc / 2 + .02)], .03, .025, M.black, NC);
       // retrovisor
-      RB(T.A[0][0] - .2, T.belt - .02, s * (T.W / 2 - .04), T.A[0][0] - .08, T.belt + .1, s * (T.W / 2 + .11), .025, pm, LT);
+      B(T.A[0][0] - .2, T.belt - .02, s * (T.W / 2 - .04), T.A[0][0] - .08, T.belt + .1, s * (T.W / 2 + .11), pm, LT);
       // linhas das portas e maçanetas
       for (const x of T.seams) {
         let y0 = T.sill + .03;
@@ -123,14 +123,14 @@ function carParts(type, T, Wc, ra, body, cabin, roof) {
       for (const x of [T.seams[1] + .22, T.seams[2] + .22]) B(x - .08, T.belt - .13, s * (T.W / 2 - .01), x + .08, T.belt - .095, s * (T.W / 2 + .018), M.darkMetal, NC);
       // faróis e lanternas (contornam a quina)
       const fx = carFaceX(T.body, (T.head[0] + T.head[1]) / 2, true), rx = carFaceX(T.body, (T.tail[0] + T.tail[1]) / 2, false);
-      RB(fx - .16, T.head[0], s * .4, fx + .008, T.head[1], s * (T.W / 2 * .92 - .01), .03, M.headlight, LT);
-      RB(rx - .008, T.tail[0], s * .46, rx + .14, T.tail[1], s * (T.W / 2 * .92 - .01), .03, M.taillight, LT);
+      B(fx - .16, T.head[0], s * .4, fx + .008, T.head[1], s * (T.W / 2 * .92 - .01), M.headlight, LT);
+      B(rx - .008, T.tail[0], s * .46, rx + .14, T.tail[1], s * (T.W / 2 * .92 - .01), M.taillight, LT);
       // rodas: pneu, roda e cubo
       for (const wx of [T.wf, T.wr]) {
         const zc = s * (T.W / 2 - .14);
-        const tire = new THREE.CylinderGeometry(T.r, T.r, .21, 20); tire.rotateX(Math.PI / 2); tire.translate(wx, T.r, zc); addMesh(tire, M.tire);
-        const rim = new THREE.CylinderGeometry(T.r * .62, T.r * .62, .02, 16); rim.rotateX(Math.PI / 2); rim.translate(wx, T.r, zc + s * .1); addMesh(rim, M.metal, NC);
-        const hub = new THREE.CylinderGeometry(T.r * .16, T.r * .16, .03, 10); hub.rotateX(Math.PI / 2); hub.translate(wx, T.r, zc + s * .112); addMesh(hub, M.darkMetal, NC);
+        const tire = new THREE.CylinderGeometry(T.r, T.r, .21, 14); tire.rotateX(Math.PI / 2); tire.translate(wx, T.r, zc); addMesh(tire, M.tire);
+        const rim = new THREE.CylinderGeometry(T.r * .62, T.r * .62, .02, 10, 1, true); rim.rotateX(Math.PI / 2); rim.translate(wx, T.r, zc + s * .1); addMesh(rim, M.metal, NC);
+        const hub = new THREE.CylinderGeometry(T.r * .16, T.r * .16, .03, 6); hub.rotateX(Math.PI / 2); hub.translate(wx, T.r, zc + s * .112); addMesh(hub, M.darkMetal, NC);
       }
     }
     // grade e placas (sem texto)
@@ -449,6 +449,7 @@ function genLamps() {
   for (const x of [10, 22, 34]) LAMP(x + .5, 73.5);
   for (const z of [35, 49, 57, 70]) LAMP(40.5, z + .5);
   LAMP(60.2, 40.5); LAMP(5.5, 36.5); LAMP(32.6, 33.6); LAMP(15.5, 18.6); LAMP(67.5, 3.5); LAMP(49.5, 25.5); LAMP(78.5, 114.5);
+  if (BAIRRO) return;   // postes de rua vêm do entorno real
   for (let z = 4; z < 128; z += 12) if (z < 72 || z > 94) LAMP(-1.4, z, 5.2);
   for (let z = 4; z < 128; z += 12) LAMP(83.4, z, 5.2);
   for (let x = 6; x < 80; x += 12) { LAMP(x, -1.4, 5.2); LAMP(x, 131.4, 5.2); }
@@ -499,8 +500,10 @@ function genTrees(R) {
     tree(px, pz, r < .35 ? 'oak' : r < .55 ? 'mango' : r < .78 ? 'ipe' : 'palm', R);
   }
   // árvores de calçada lá fora
-  for (let z = 4; z < 130; z += 9) { tree(-12.5, z, 'oak', R, true); tree(98.5, z + 2, 'ipe', R, true); }
-  for (let x = 3; x < 82; x += 9) { tree(x, -12.5, 'ipe', R, true); tree(x + 3, 142.5, 'oak', R, true); }
+  if (!BAIRRO) {
+    for (let z = 4; z < 130; z += 9) { tree(-12.5, z, 'oak', R, true); tree(98.5, z + 2, 'ipe', R, true); }
+    for (let x = 3; x < 82; x += 9) { tree(x, -12.5, 'ipe', R, true); tree(x + 3, 142.5, 'oak', R, true); }
+  }
   // arbustos soltos nos gramados
   for (let i = 0; i < 160; i++) {
     const x = 2 + R() * 78, z = 2 + R() * 126;
@@ -511,7 +514,9 @@ function genTrees(R) {
 // ---------- montagem completa ----------
 function generateSite() {
   const R = rng(2024);
-  genGround(); genStreets(); genNeighbors(R); genWall(); genPaths();
+  genGround();
+  if (BAIRRO) genBairro(rng(77)); else { genStreets(); genNeighbors(R); }
+  genWall(); genPaths();
   genParking(R); genGuarita(); genLeisure(); genTech(R); genPracas();
   for (const b of BUILDINGS) genBuilding(b, R);
   genLamps(); genTrees(R);

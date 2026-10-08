@@ -102,6 +102,7 @@ function updateSky(dt, camera, renderer, instant = false) {
   scene.environmentIntensity = lerp(.75, .1, t);
   renderer.toneMappingExposure = lerp(.95, 1.25, t);
   M.glassLit.emissiveIntensity = 1.3 * night;
+  if (M.facade) M.facade.emissiveIntensity = .95 * night;
   M.bulb.emissiveIntensity = .2 + 3.2 * night;
   M.glowPool.opacity = .85 * night;
   for (const L of lampLights) L.intensity = 14 * night;

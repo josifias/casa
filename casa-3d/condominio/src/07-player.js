@@ -9,6 +9,8 @@ const R_PLAYER = .3;
 
 function blocked(x, z) {
   if (x < XMIN || x > XMAX || z < ZMIN || z > ZMAX) return true;
+  // quadras do entorno (casas, condomínios fechados, lagoa): só ruas e calçadas são caminháveis
+  if (BLOCK_POLYS.length && (inBlock(x, z) || inBlock(x + R_PLAYER, z) || inBlock(x - R_PLAYER, z) || inBlock(x, z + R_PLAYER) || inBlock(x, z - R_PLAYER))) return true;
   const r2 = R_PLAYER * R_PLAYER;
   for (const c of COLL) {
     if (x < c[0] - .4 || x > c[2] + .4 || z < c[1] - .4 || z > c[3] + .4) continue;
@@ -17,11 +19,19 @@ function blocked(x, z) {
   }
   return false;
 }
-function freeNear(x, z) {
+function freeNear(x, z, far = 70) {
   if (!blocked(x, z)) return [x, z];
   for (let r = .3; r <= 3; r += .3) for (let a = 0; a < 6.28; a += .45) {
     const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
     if (!blocked(px, pz)) return [px, pz];
+  }
+  // tocou dentro de uma quadra (casas, lagoa): leva para a calçada ou rua mais próxima
+  for (let r = 4; r <= far; r += 2) {
+    const n = Math.ceil(Math.PI * r);
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
+      if (!blocked(px, pz)) return [px, pz];
+    }
   }
   return null;
 }

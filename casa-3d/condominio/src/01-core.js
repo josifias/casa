@@ -14,7 +14,8 @@ const LOW_END = IS_TOUCH && (navigator.hardwareConcurrency || 4) <= 4;
 // z 0..130 (norte→sul), y para cima. Medidas tiradas do masterplan de divulgação
 // (escala ≈ 7,7 px/m, conferida pelas unidades de 7,6 m do apartamento tipo).
 const LOT_W = 82, LOT_D = 130;
-const XMIN = -24, XMAX = 106, ZMIN = -24, ZMAX = 152;   // área caminhável (inclui as ruas)
+// área caminhável: com o entorno real (bairro.js) vai até três quarteirões para cada lado
+const XMIN = window.BAIRRO ? -328 : -24, XMAX = window.BAIRRO ? 398 : 106, ZMIN = window.BAIRRO ? -468 : -24, ZMAX = window.BAIRRO ? 448 : 152;
 const EYE = 1.6;
 
 // Prédio = 2 blocos lado a lado; cada fileira tem 4 apartamentos de 7,6 m.
@@ -71,6 +72,7 @@ const PLACES = [
   { id: 'redario', nome: 'Redário', icon: 'hammock', pos: [67, 4], look: [59, 3] },
   { id: 'bicicletario', nome: 'Bicicle-tário', icon: 'bike', pos: [58.8, 12], look: [55, 20] },
   { id: 'blocos', nome: 'Blocos', icon: 'bldg', pos: [3, 54], look: [40, 54] },
+  ...(window.BAIRRO ? [{ id: 'entorno', nome: 'Rua (entorno)', icon: 'road', pos: [-12.6, -12.6], look: [40, -12.6] }] : []),
 ];
 
 // ---------- utilitários ----------

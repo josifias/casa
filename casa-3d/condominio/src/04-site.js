@@ -6,8 +6,10 @@ const flat = (x0, z0, x1, z1, mat, top = .05) => B(x0, 0, z0, x1, top, z1, mat, 
 function genGround() {
   const far = new THREE.PlaneGeometry(2400, 2400); far.rotateX(-Math.PI / 2); far.translate(41, -.06, 65);
   addMesh(far, C('#5d7a43', 1), { cast: false });
-  const g = new THREE.PlaneGeometry(XMAX - XMIN + 4, ZMAX - ZMIN + 4);
-  g.rotateX(-Math.PI / 2); g.translate((XMIN + XMAX) / 2, 0, (ZMIN + ZMAX) / 2);
+  // com o entorno real, o gramado fica só dentro do terreno (ruas e quadras vêm do bairro.js)
+  const [gx0, gz0, gx1, gz1] = BAIRRO ? [0, 0, LOT_W, LOT_D] : [XMIN - 2, ZMIN - 2, XMAX + 2, ZMAX + 2];
+  const g = new THREE.PlaneGeometry(gx1 - gx0, gz1 - gz0);
+  g.rotateX(-Math.PI / 2); g.translate((gx0 + gx1) / 2, 0, (gz0 + gz1) / 2);
   projectUV(g, M.grass); addMesh(g, M.grass, { cast: false });
 }
 
