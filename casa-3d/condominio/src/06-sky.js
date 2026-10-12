@@ -79,6 +79,7 @@ function aimShadow(center, half) {
   moonLight.target.position.copy(center); moonLight.position.copy(center).addScaledVector(MOON_DIR, 180);
 }
 function assignLampLights(pos) {
+  if (INSIDE || CORE) return;   // dentro do prédio as luzes ficam nos ambientes
   const big = LAMPS.filter((l) => !l.small);
   big.sort((a, b) => (a.x - pos.x) ** 2 + (a.z - pos.z) ** 2 - ((b.x - pos.x) ** 2 + (b.z - pos.z) ** 2));
   lampLights.forEach((L, i) => { const l = big[i]; if (l) L.position.set(l.x, l.y - .3, l.z); });
@@ -99,13 +100,14 @@ function updateSky(dt, camera, renderer, instant = false) {
   sunLight.intensity = 2.7 * (1 - t); sunLight.color.setRGB(1, lerp(.94, .7, dusk), lerp(.85, .5, dusk));
   hemi.intensity = lerp(1.0, .16, t); hemi.color.setRGB(lerp(.86, .35, t), lerp(.92, .42, t), lerp(1, .7, t));
   moonLight.intensity = .45 * night;
-  scene.environmentIntensity = lerp(.75, .1, t);
+  scene.environmentIntensity = INSIDE || CORE ? lerp(.55, .12, t) : lerp(.75, .1, t);
   renderer.toneMappingExposure = lerp(.95, 1.25, t);
   M.glassLit.emissiveIntensity = 1.3 * night;
   if (M.facade) M.facade.emissiveIntensity = .95 * night;
   M.bulb.emissiveIntensity = .2 + 3.2 * night;
   M.glowPool.opacity = .85 * night;
-  for (const L of lampLights) L.intensity = 14 * night;
+  for (const L of lampLights) L.intensity = (L.userData.power ?? 14) * night;
+  if (KIT) KIT.night(night);
   document.body.classList.toggle('night', tod > .5);
   return before !== tod;
 }

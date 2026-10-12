@@ -116,6 +116,12 @@ function genGuarita() {
 const GARDENS = { '03': [3, 4], '04': [1, 2], '05': [1, 2], '11': [1, 2], '06': [3, 4], '12': [3, 4] };
 // número da unidade (01–04) de cada apartamento da fileira, na ordem do eixo do prédio (como no masterplan)
 const UNIT_NUM = { h: [[4, 3, 2, 1], [1, 2, 3, 4]], v: [[1, 2, 3, 4], [4, 3, 2, 1]] };
+// núcleos de escada de todos os blocos (preenchida em genBuilding; usada para entrar e subir)
+const CORE_LIST = [];
+// planta do núcleo, a partir da porta de entrada (s ao longo do prédio, t na largura de 2,80 m):
+// hall da entrada s 0–1,6 · escada s 1,6–5,6 (lado t 1,2–2,8) · galeria t 0–1,2 · hall do fundo s 5,6–7,2
+const CORE_ST0 = 1.6, CORE_ST1 = 5.6, CORE_GAL = 1.2, CORE_DOOR = [.7, 2.1];
+const unitTag = (b, row, k, u) => `${b.id}:${row}:${k}:${u}`;
 function hasGarden(b, row, u) {
   return (GARDENS[b.blocks[u < 2 ? 0 : 1]] || [1, 2, 3, 4]).includes(UNIT_NUM[b.dir][row][u]);
 }
@@ -131,7 +137,9 @@ function genBuilding(b, R) {
 
   for (const [c0, c1] of ROWS) {
     LB(0, 0, c0, BLEN, HT, c1, M.wall);
-    LB(-.03, 0, c0 - .03, BLEN + .03, .45, c1 + .03, M.wallDark, NC);
+    // faixa escura da base só na casca externa (por dentro fica o piso dos apartamentos do térreo)
+    LB(-.03, 0, c0 - .03, BLEN + .03, .45, c0, M.wallDark, NC); LB(-.03, 0, c1, BLEN + .03, .45, c1 + .03, M.wallDark, NC);
+    LB(-.03, 0, c0, 0, .45, c1, M.wallDark, NC); LB(BLEN, 0, c0, BLEN + .03, .45, c1, M.wallDark, NC);
   }
   // faces: [c da face, sentido para fora, é fachada externa]
   const FACES = [[0, -1, true], [ROW, 1, false], [ROW + COR, -1, false], [BWID, 1, true]];
@@ -153,13 +161,15 @@ function genBuilding(b, R) {
       const ua = u * UNIT, mir = u % 2 === 1;
       const span = (a0, a1) => mir ? [ua + UNIT - a1, ua + UNIT - a0] : [ua + a0, ua + a1];
       for (const [outer, row] of [[FACES[0], 0], [FACES[3], 1]]) {
+        TAG = unitTag(b, row, k, u);   // janelas da unidade (somem quando o visitante está dentro dela)
         const litSala = R() < .35, porta = k === 0 && hasGarden(b, row, u);
         for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) {
           const [p0, p1] = span(a0, a1);
           win(outer, p0, p1, yb + (sala && porta ? .15 : 1), yb + 2.2, sala ? litSala : R() < .3);
         }
       }
-      for (const inner of [FACES[1], FACES[2]]) { const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); }
+      [FACES[1], FACES[2]].forEach((inner, row) => { TAG = unitTag(b, row, k, u); const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); });
+      TAG = null;
     }
   }
   // faixa central: piso das entradas, cascalho no vão do meio e núcleos de escada
@@ -176,9 +186,80 @@ function genBuilding(b, R) {
     [p, q] = AT(a, s, .07, .085); LB(p, y0, mid - .025, q, y1, mid + .025, M.frame, NC);
     [p, q] = AT(a, s, 0, .13); LB(p, y0 - .1, c0 - .1, q, y0 - .04, c1 + .1, M.white, NC);
   };
+  // ---------- interior do núcleo: halls, galeria, escada, portas numeradas ----------
+  function genCore(i, a0, a1) {
+    const L = a1 - a0, aOf = (s) => i === 0 ? a0 + s : a1 - s;
+    const S = (s0, y0, t0, s1, y1, t1, mat, o = NC) => LB(aOf(s0), y0, ROW + t0, aOf(s1), y1, ROW + t1, mat, o);
+    const CAST = {}, W = .15, floorMat = C('#d9d3c9', .55), stairMat = C('#c9c3b8', .8);
+    const toW = (s, t) => toLot(aOf(s), ROW + t);
+    const toCore = (x, z) => { const a = HD ? x - r.x0 : z - r.z0, c = HD ? z - r.z0 : x - r.x0; return [i === 0 ? a - a0 : a1 - a, c - ROW]; };
+    // paredes das pontas, com a porta (térreo) e os janelões de cada andar
+    const endWall = (sA, sB, holes) => {
+      const ys = [...new Set([0, NH, ...holes.flatMap((h) => [h[2], h[3]])])].sort((x, y) => x - y);
+      for (let j = 0; j + 1 < ys.length; j++) {
+        const y0 = ys[j], y1 = ys[j + 1], h = holes.find((q) => q[2] <= y0 && q[3] >= y1);
+        if (h) { S(sA, y0, 0, sB, y1, h[0], M.wallGray, CAST); S(sA, y0, h[1], sB, y1, COR, M.wallGray, CAST); }
+        else S(sA, y0, 0, sB, y1, COR, M.wallGray, CAST);
+      }
+    };
+    const win = (k) => [.6, 2.2, k * FLOOR_H + .9, k * FLOOR_H + 2.3];
+    endWall(0, W, [[CORE_DOOR[0], CORE_DOOR[1], 0, 2.3], ...Array.from({ length: F - 1 }, (_, k) => win(k + 1))]);
+    endWall(L - W, L, Array.from({ length: F }, (_, k) => win(k)));
+    S(0, HT, 0, L, NH, .12, M.wallGray, CAST); S(0, HT, COR - .12, L, NH, COR, M.wallGray, CAST);
+    S(W, HT - .2, 0, L - W, HT, COR, M.white, CAST);                                   // forro do último andar
+    const doors = [];
+    for (let k = 0; k < F; k++) {
+      const y = k * FLOOR_H, ceil = (k + 1) * FLOOR_H - .2;
+      // pisos: hall da entrada, galeria e hall do fundo (no térreo também embaixo da escada)
+      const parts = [[W, 0, CORE_ST0, COR], [CORE_ST0, 0, CORE_ST1, CORE_GAL], [CORE_ST1, 0, L - W, COR]];
+      if (k === 0) parts.push([CORE_ST0, CORE_GAL, CORE_ST1, COR]);
+      for (const [s0, t0, s1, t1] of parts) {
+        if (k > 0) S(s0, y - .2, t0, s1, y - .02, t1, M.white, CAST);
+        S(s0, k > 0 ? y - .02 : 0, t0, s1, y + .02, t1, floorMat, { cast: false });
+      }
+      // guarda-corpo da galeria (e nas bordas do vão da escada no térreo e no último andar)
+      S(CORE_ST0, y + .02, CORE_GAL - .01, CORE_ST1, y + .95, CORE_GAL + .01, M.railing);
+      S(CORE_ST0, y + .95, CORE_GAL - .03, CORE_ST1, y + 1.0, CORE_GAL + .03, M.darkMetal);
+      for (const sp of [CORE_ST0, (CORE_ST0 + CORE_ST1) / 2, CORE_ST1]) S(sp - .02, y + .02, CORE_GAL - .02, sp + .02, y + .98, CORE_GAL + .02, M.darkMetal);
+      const edge = k === F - 1 ? CORE_ST0 : k === 0 ? CORE_ST1 : null;
+      if (edge) { S(edge - .01, y + .02, CORE_GAL, edge + .01, y + .95, COR, M.railing); S(edge - .03, y + .95, CORE_GAL, edge + .03, y + 1.0, COR, M.darkMetal); }
+      // luminárias e placa do andar
+      for (const sc of [.8, L - .8]) S(sc - .25, ceil - .03, 1.15, sc + .25, ceil, 1.65, M.bulb);
+      { const [px, pz] = toW((CORE_ST0 + CORE_ST1) / 2, .012); SIGN(k === 0 ? 'TÉRREO' : `${k + 1}º PAVIMENTO`, px, y + 1.75, pz, .9, .22, HD ? 'pz' : 'px', '#2b2b2e', '#ffffff'); }
+      // portas dos 4 apartamentos do andar, com o número
+      for (const [s0, s1, uIdx] of [[.4, 1.2, i === 0 ? 0 : 3], [6.0, 6.8, i === 0 ? 1 : 2]]) for (const row of [0, 1]) {
+        const tw = row === 0 ? [0, .03] : [COR - .03, COR], tl = row === 0 ? [.03, .06] : [COR - .06, COR - .03];
+        S(s0 - .06, y + .02, tw[0], s1 + .06, y + 2.18, tw[1], M.frame);
+        S(s0, y + .03, tl[0], s1, y + 2.12, tl[1], M.door);
+        const kn = uIdx % 2 ? s0 + .1 : s1 - .1;
+        S(kn - .05, y + 1.0, row === 0 ? .06 : COR - .09, kn + .05, y + 1.04, row === 0 ? .09 : COR - .06, M.metal);
+        const num = (k + 1) * 100 + UNIT_NUM[b.dir][row][uIdx];
+        const [px, pz] = toW((s0 + s1) / 2, row === 0 ? .065 : COR - .065);
+        SIGN(String(num), px, y + 2.36, pz, .4, .1, HD ? (row === 0 ? 'pz' : 'nz') : (row === 0 ? 'px' : 'nx'), '#2b2b2e', '#ffffff');
+        doors.push({ k, s0, s1, row, u: uIdx, num });
+      }
+      // lance da escada até o próximo andar: 16 degraus de 17,5 cm (sobe do hall da entrada ao hall do fundo)
+      if (k < F - 1) {
+        for (let j = 0; j < 16; j++) {
+          const sa = CORE_ST0 + j * .25, top = y + (j + 1) * .175;
+          S(sa, top - .32, CORE_GAL + .04, sa + .25, top, COR, stairMat, CAST);
+        }
+        for (const tr of [COR - .07, CORE_GAL + .08]) {
+          const [x0, z0] = toW(CORE_ST0, tr), [x1, z1] = toW(CORE_ST1, tr);
+          rod([x0, y + .92, z0], [x1, y + FLOOR_H + .92, z1], .022, M.darkMetal, NC);
+        }
+        for (const sp of [CORE_ST0 + .15, (CORE_ST0 + CORE_ST1) / 2, CORE_ST1 - .15]) {
+          const top = y + FLOOR_H * (sp - CORE_ST0) / (CORE_ST1 - CORE_ST0), [x, z] = toW(sp, CORE_GAL + .08);
+          rod([x, top, z], [x, top + .92, z], .015, M.darkMetal, NC);
+        }
+      }
+    }
+    CORE_LIST.push({ b, i, block: b.blocks[i], L, F, toW, toCore, doors, out: toW(-2.2, COR / 2) });
+  }
+
   CORES.forEach(([a0, a1], i) => {
-    LB(a0, 0, ROW, a1, NH, ROW + COR, M.wallGray);
-    LB(a0 - .05, NH, ROW, a1 + .05, NH + .1, ROW + COR, M.roof, NC);
+    genCore(i, a0, a1);
+    LB(a0 - .05, NH, ROW, a1 + .05, NH + .1, ROW + COR, M.roof);
     // janelão da escada em cada andar, nas duas paredes de ponta do núcleo
     const out = i === 0 ? [a0, -1] : [a1, 1], inn = i === 0 ? [a1, 1] : [a0, -1];
     for (let k = 0; k < F; k++) {
@@ -187,9 +268,10 @@ function genBuilding(b, R) {
     }
     // entrada do bloco: porta de vidro, marquise com luminária e placa
     const [e, s1] = out;
-    let [p, q] = AT(e, s1, 0, .06); LB(p, 0, mid - .7, q, 2.3, mid + .7, M.darkMetal, NC);
-    [p, q] = AT(e, s1, .06, .07); LB(p, .05, mid - .62, q, 2.22, mid + .62, M.glass, NC);
-    [p, q] = AT(e, s1, .07, .1); LB(p, 1.0, mid - .5, q, 1.04, mid + .5, M.metal, NC);
+    // batentes e verga da porta (aberta: as folhas de vidro ficam recolhidas por dentro, nas laterais)
+    let [p, q] = AT(e, s1, 0, .06);
+    LB(p, 0, mid - .76, q, 2.36, mid - .7, M.darkMetal, NC); LB(p, 0, mid + .7, q, 2.36, mid + .76, M.darkMetal, NC); LB(p, 2.3, mid - .76, q, 2.36, mid + .76, M.darkMetal, NC);
+    [p, q] = AT(e, s1, -.24, -.2); LB(p, .02, ROW + .02, q, 2.28, mid - .72, M.clearGlass, NC); LB(p, .02, mid + .72, q, 2.28, ROW + COR - .02, M.clearGlass, NC);
     [p, q] = AT(e, s1, 0, 1.4); LB(p, 2.55, ROW + .12, q, 2.7, ROW + COR - .12, M.concrete, NC);
     [p, q] = AT(e, s1, .55, .85); LB(p, 2.5, mid - .15, q, 2.55, mid + .15, M.bulb, NC);
     const [lx, lz] = toLot((p + q) / 2, mid); LAMPS.push({ x: lx, y: 2.45, z: lz, small: true });

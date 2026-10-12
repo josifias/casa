@@ -20,6 +20,7 @@ const D_IN = 4.60;       // profundidade interna total
 const CX = W_IN / 2, CZ = D_IN / 2;
 const EYE = 1.55;
 const DOOR_H = 2.10;
+let SALA_SILL = 1.00;   // peitoril da janela da sala (no térreo com garden ela vira porta de vidro)
 
 const ROOMS = {
   infantil: { nome: 'Quarto infantil', short: 'Infantil', rect: [0, 0, 2.40, 3.00], dims: '2,40 × 3,00 m', area: '7,20 m²' },

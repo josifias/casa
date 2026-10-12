@@ -8,6 +8,9 @@ let walkTarget = null, lastInput = performance.now();
 const R_PLAYER = .3;
 
 function blocked(x, z) {
+  if (INSIDE) return interiorBlocked(x, z);   // dentro de um apartamento
+  if (CORE) return coreBlocked(x, z);         // hall, galeria e escada do prédio
+  if (CORE_LIST.length && coreDoorway(x, z)) return false;   // passando pela porta de entrada do bloco
   if (x < XMIN || x > XMAX || z < ZMIN || z > ZMAX) return true;
   // quadras do entorno (casas, condomínios fechados, lagoa): só ruas e calçadas são caminháveis
   if (BLOCK_POLYS.length && (inBlock(x, z) || inBlock(x + R_PLAYER, z) || inBlock(x - R_PLAYER, z) || inBlock(x, z + R_PLAYER) || inBlock(x, z - R_PLAYER))) return true;
@@ -45,11 +48,12 @@ function tryMove(dx, dz) {
     if (dz && !blocked(walk.x, walk.z + dz / n)) { walk.z += dz / n; m = true; }
     if (!m) break;
     moved = true;
+    if (CORE) coreUpdate(); else if (!INSIDE) maybeEnterCore();
   }
   return moved;
 }
 function applyWalkCamera(cam) {
-  cam.position.set(walk.x, EYE, walk.z);
+  cam.position.set(walk.x, INSIDE ? INSIDE.fr.y + APTO_EYE : CORE ? coreLevel() + EYE : EYE, walk.z);
   cam.rotation.set(walk.pitch, walk.yaw, 0, 'YXZ');
   if (Math.abs(cam.fov - walk.fov) > .01) { cam.fov = walk.fov; cam.updateProjectionMatrix(); }
 }
@@ -65,7 +69,7 @@ function stepWalk(dt) {
   if (joy.active) { f += -joy.y; turn += -joy.x * .9; if (Math.hypot(joy.x, joy.y) > .92) run = true; }
   if (f || s) {
     walkTarget = null;
-    const sp = (run ? 7 : 3.2) * dt, sn = Math.sin(walk.yaw), cs = Math.cos(walk.yaw);
+    const sp = (INSIDE ? (run ? 2.4 : 1.4) : CORE ? (run ? 2.8 : 1.6) : (run ? 7 : 3.2)) * dt, sn = Math.sin(walk.yaw), cs = Math.cos(walk.yaw);
     tryMove((-sn * f + cs * s) * sp, (-cs * f - sn * s) * sp);
     changed = true; lastInput = performance.now();
   }
@@ -74,7 +78,7 @@ function stepWalk(dt) {
     const dx = walkTarget[0] - walk.x, dz = walkTarget[1] - walk.z, d = Math.hypot(dx, dz);
     if (d < .05) walkTarget = null;
     else {
-      const step = Math.min(d, 4.5 * dt * clamp(d, .4, 1));
+      const step = Math.min(d, (INSIDE || CORE ? 2 : 4.5) * dt * clamp(d, .4, 1));
       if (!tryMove(dx / d * step, dz / d * step)) walkTarget = null;
     }
     changed = true;

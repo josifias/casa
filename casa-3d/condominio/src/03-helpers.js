@@ -2,6 +2,7 @@
 // 03 · HELPERS — caixas, cilindros, placas, colisão e fusão de geometrias
 // ============================================================
 let CUR = null;
+let TAG = null;               // marca as malhas criadas agora (ex.: janelas de uma unidade)
 const COLL = [];              // caixas 2D de colisão [x0, z0, x1, z1]
 const LAMPS = [];             // cabeças de poste {x, y, z} (luz noturna)
 function within(group, fn) { const p = CUR; CUR = group; fn(); CUR = p; }
@@ -26,6 +27,7 @@ function projectUV(geom, mat) {
 function addMesh(geom, mat, o = {}) {
   const m = new THREE.Mesh(geom, mat);
   m.castShadow = o.cast ?? true; m.receiveShadow = o.receive ?? true;
+  if (TAG) m.userData.tag = TAG;
   (o.parent || CUR).add(m);
   return m;
 }
@@ -105,8 +107,11 @@ function mergeGroup(group, cell = 0) {
       const bb = g.boundingBox, big = bb.max.x - bb.min.x > cell * 2 || bb.max.z - bb.min.z > cell * 2;
       key += big ? '|big' : '|' + Math.floor((bb.min.x + bb.max.x) / 2 / cell) + ',' + Math.floor((bb.min.z + bb.max.z) / 2 / cell);
     }
-    if (!buckets.has(key)) buckets.set(key, { mat: o.material, cast: o.castShadow, receive: o.receiveShadow, geoms: [] });
-    buckets.get(key).geoms.push(g);
+    if (!buckets.has(key)) buckets.set(key, { mat: o.material, cast: o.castShadow, receive: o.receiveShadow, geoms: [], n: 0, tags: [] });
+    const bk = buckets.get(key);
+    if (o.userData.tag) bk.tags.push([o.userData.tag, bk.n, g.attributes.position.count]);   // faixa de vértices na malha fundida
+    bk.n += g.attributes.position.count;
+    bk.geoms.push(g);
     victims.push(o);
   });
   // remove os originais de uma vez (remove() um a um é quadrático com milhares de filhos)
@@ -128,6 +133,7 @@ function mergeGroup(group, cell = 0) {
     if (!merged) continue;
     merged.computeBoundingSphere();
     const mesh = new THREE.Mesh(merged, b.mat);
+    if (b.tags.length) { const t = mesh.userData.tags = {}; for (const [k, s, n] of b.tags) (t[k] = t[k] || []).push([s, n]); }
     mesh.castShadow = b.cast; mesh.receiveShadow = b.receive;
     group.add(mesh);
   }

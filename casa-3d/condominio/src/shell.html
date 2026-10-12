@@ -106,6 +106,30 @@ body.walk.touch .joy{display:block}
 #loader b{font-size:15px}
 #loader small{font-size:12px;opacity:.75;max-width:300px;text-align:center}
 @keyframes rot{to{transform:rotate(360deg)}}
+.enter{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(112px + var(--safe-b));z-index:6;display:none;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--accent);color:#1d1510;font:inherit;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap}
+.enter.on{display:inline-flex}
+body.inside .enter,body.incore .enter{display:none}
+.inbar{position:fixed;left:50%;transform:translateX(-50%);top:calc(116px + var(--safe-t));z-index:6;display:none;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:999px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);white-space:nowrap;max-width:calc(100vw - 24px)}
+body.inside .inbar,body.incore .inbar{display:flex}
+body.incore:not(.inside) #inStyle{display:none}
+.inbar .t{min-width:0;margin-right:4px}
+.inbar b{display:block;font-size:13.5px}
+.inbar small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.inbar button{height:34px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.13);font-size:12.5px;font-weight:650;flex:0 0 auto}
+.inbar button.out{background:#f6f1ea;color:#221c16}
+body.inside .hint,body.incore .hint{top:calc(176px + var(--safe-t))}
+#fade{position:fixed;inset:0;background:#0d0b09;opacity:0;pointer-events:none;transition:opacity .3s;z-index:25;display:flex;align-items:center;justify-content:center;color:#f6f1ea;font-size:15px;font-weight:600}
+#fade.on{opacity:1;pointer-events:auto}
+.apcard .blocks{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
+.apcard .blocks button{min-width:40px;height:34px;border-radius:9px;background:#efe7dc;color:#2a221b;font-weight:650;font-size:13px}
+.apcard .blocks button[aria-pressed="true"]{background:#c46a3a;color:#fff}
+.apgrid{display:grid;grid-template-columns:auto repeat(4,1fr);gap:6px;align-items:center}
+.apgrid .fl{font-size:12px;color:#6b5f53;padding-right:6px;white-space:nowrap}
+.apgrid button{height:44px;border-radius:10px;background:#f3ebe0;border:1px solid #e3d7c6;color:#2a221b;font-weight:700;font-size:15px;position:relative;font-variant-numeric:tabular-nums}
+.apgrid button:hover{background:#e9dcc8}
+.apgrid button[aria-current="true"]{background:#c46a3a;color:#fff;border-color:transparent}
+.apgrid button i{position:absolute;right:4px;top:2px;font-style:normal;font-size:11px}
+.apcard .go{margin-top:12px;height:38px;padding:0 14px;border-radius:10px;background:#2a221b;color:#fff;font-weight:650;font-size:13px}
 #fps{position:fixed;left:8px;bottom:8px;z-index:40;font:12px monospace;background:#000a;color:#0f0;padding:3px 6px;border-radius:4px;display:none}
 
 body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,body.preview #labels,body.preview .hint,body.preview .music,body.preview .wa{display:none!important}
@@ -125,6 +149,11 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
   .mini{width:92px;right:10px;top:calc(110px + var(--safe-t));bottom:auto;padding:5px}
   .mini .cap{display:none}
   .hint{top:auto;bottom:calc(104px + var(--safe-b))}
+  body.inside .hint,body.incore .hint{top:auto}
+  .enter{bottom:auto;top:calc(104px + var(--safe-t));padding:8px 14px;font-size:13px}
+  .inbar{top:calc(102px + var(--safe-t));padding:5px 5px 5px 12px}
+  .inbar button{padding:0 10px}
+  body.inside .mini,body.incore .mini{display:none}
   body:not(.walk) .mini{display:none}
 }
 @media (max-width:440px){
@@ -165,6 +194,9 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
 <div class="mini" id="mini"><div class="cap"><span>Mapa</span><b id="here">—</b></div><svg id="miniSvg"></svg></div>
 <div class="joy" id="joy"><i></i></div>
 <div class="hint" id="hint"></div>
+<button class="enter" id="enterBtn"><svg class="i" viewBox="0 0 24 24"><path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M4 21h16M14.5 12.5v.01"/></svg><span id="enterTxt">Entrar</span></button>
+<div class="inbar" id="inBar"><div class="t"><b id="inName">Apto</b><small id="inSub"></small></div><button id="inPick" title="Escolher um apartamento do bloco">Aptos</button><button id="inStyle" title="Trocar a decoração">Decoração</button><button class="out" id="inOut" title="Sair do apartamento">Sair</button></div>
+<div id="fade"><span></span></div>
 
 <footer class="bottom">
   <div class="thumbs" id="thumbs"></div>
@@ -195,6 +227,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li><b>Vista aérea:</b> arraste para girar, pinça/roda para zoom. Toque num bloco ou área para descer até lá.</li>
       <li><b>Planta:</b> vista de cima com os nomes de cada bloco e área de lazer.</li>
       <li><b>Passeio:</b> arraste para olhar em volta e toque no chão para andar. No computador, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas andam e <kbd>Shift</kbd> corre; no celular, use o joystick (empurre até a borda para correr).</li>
+      <li><b>Prédios e apartamentos:</b> entre pela porta de vidro de qualquer bloco, suba a escada até o andar que quiser e toque na porta de um apartamento para entrar — dá para andar por dentro dele e ver o condomínio pelas janelas. Para sair, abra a porta de entrada do apartamento (você volta ao hall) e desça a escada até a rua. Atalhos: o botão <b>Apartamentos</b> perto da entrada, a miniatura <b>Escolher apto</b> ou o nome do bloco na vista aérea levam direto a qualquer apartamento.</li>
       <li>As miniaturas embaixo levam direto à portaria, piscina, salão, playground, praças e demais áreas. <kbd>N</kbd> alterna dia e noite.</li>
       <li>O botão <b>Música</b> (ou a tecla <kbd>M</kbd>) liga e desliga a música ambiente.</li>
     </ul>
@@ -204,6 +237,18 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
     <p class="note">Visualização 3D ilustrativa, criada de forma independente a partir do masterplan de divulgação. <b>Não é material oficial da construtora.</b> Posições, cores e equipamentos são aproximados; mobiliário e paisagismo podem ser diferentes do entregue.</p>
     <p class="note">Entorno (ruas, quadras e construções num raio de três quarteirões) gerado com dados do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© colaboradores do OpenStreetMap</a> (ODbL). Fachadas, cores, muros, árvores e carros do entorno são ilustrativos.</p>
     <p class="note">Música ambiente: <i>Gymnopédie nº 1</i> (Erik Satie), gravação de <a href="https://incompetech.com" target="_blank" rel="noopener">Kevin MacLeod</a>, licença <a href="https://creativecommons.org/licenses/by/3.0/deed.pt-br" target="_blank" rel="noopener">CC BY 3.0</a> (convertida para MP3 de 112 kbps).</p>
+  </div>
+</div>
+
+<div class="modal" id="aptoModal" role="dialog" aria-modal="true" aria-labelledby="apTitle">
+  <div class="card apcard">
+    <button class="close" id="apClose" aria-label="Fechar">×</button>
+    <h2 id="apTitle">Escolha o apartamento</h2>
+    <p>Todos os apartamentos têm a mesma planta de 2 quartos (36,24 m²); metade deles é espelhada, conforme a posição no prédio. Escolha o bloco e o apartamento para entrar.</p>
+    <div class="blocks" id="apBlocks"></div>
+    <div class="apgrid" id="apGrid"></div>
+    <p class="note">🌿 = térreo com garden (área privativa descoberta). A decoração é ilustrativa; os apartamentos são entregues sem móveis.</p>
+    <button class="go" id="apGo">Ir até a entrada do bloco</button>
   </div>
 </div>
 

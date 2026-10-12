@@ -3,7 +3,7 @@
 Dois passeios 3D interativos, feitos no navegador:
 
 - **Apartamento** (`/`) — apartamento tipo de 2 quartos (36,24 m²): maquete com corte, planta com medidas e passeio em primeira pessoa por todos os cômodos. Dois estilos de decoração, dia/noite, planta espelhável e portas animadas (incluindo uma porta de correr).
-- **Condomínio** (`/condominio/`) — o condomínio inteiro: 16 blocos, portaria, estacionamento, piscina, salão de festas, playground, fitness, praças, redário e pet place. Vista aérea, planta e passeio a pé com colisão, dia/noite, minimapa clicável e atalhos para cada área. Em volta, o **entorno real** num raio de três quarteirões para cada lado (ruas, calçadas, quadras, casas, postes com fiação, árvores e carros), gerado com dados do OpenStreetMap.
+- **Condomínio** (`/condominio/`) — o condomínio inteiro: 16 blocos, portaria, estacionamento, piscina, salão de festas, playground, fitness, praças, redário e pet place. Vista aérea, planta e passeio a pé com colisão, dia/noite, minimapa clicável e atalhos para cada área. Dá para **entrar a pé em qualquer prédio** (porta de vidro, hall, galeria e escada de verdade em cada andar), **subir a escada** e tocar na porta de **qualquer um dos 304 apartamentos** para entrar: o interior é o mesmo apartamento 3D da página principal, posicionado no andar e no lado certos do prédio, espelhado quando a unidade é espelhada, e pelas janelas aparece o condomínio. Em volta, o **entorno real** num raio de três quarteirões para cada lado (ruas, calçadas, quadras, casas, postes com fiação, árvores e carros), gerado com dados do OpenStreetMap.
 
 **[Ver ao vivo](https://casa-josifias.vercel.app)** · **[Condomínio](https://casa-josifias.vercel.app/condominio/)**
 
@@ -29,7 +29,7 @@ Páginas únicas (`index.html` e `condominio/index.html`), sem backend, sem buil
 casa-3d/
 ├── index.html      ← apartamento publicado (gerado por build.py)
 ├── preview.jpg     ← miniatura para redes sociais / WhatsApp
-├── build.py        ← concatena src/*.js dentro de src/shell.html (as duas páginas)
+├── build.py        ← concatena src/*.js dentro de src/shell.html (as duas páginas) e embute src/01–05 no condomínio (APTO_KIT)
 ├── condominio/
 │   ├── index.html  ← condomínio publicado (gerado por build.py)
 │   ├── preview.jpg
@@ -44,6 +44,7 @@ casa-3d/
 │       ├── 05-site2.js    ← lazer, estacionamento, praças, postes, árvores
 │       ├── 05-site3.js    ← entorno: ruas, calçadas, quadras, casas, muros, postes e fiação
 │       ├── 06-sky.js      ← céu, sol/lua, sombras, dia/noite
+│       ├── 07-interior.js ← dentro dos prédios: hall, escada e andares; apartamentos (posição/espelhamento de cada unidade, portas)
 │       ├── 07-player.js   ← caminhar, colisão, olhar, joystick
 │       └── 08-app.js      ← modos, minimapa, rótulos, interface, loop
 └── src/
@@ -88,6 +89,7 @@ No condomínio:
 |---|---|
 | `?modo=aerea\|planta\|passeio` | abre direto num modo |
 | `?local=portaria\|estacionamento\|piscina\|salao\|playground\|fitness\|praca\|jogos\|pet\|redario\|bicicletario\|blocos` | abre o passeio num ponto |
+| `?apto=05-302` | abre direto dentro do apartamento 302 do bloco 05 |
 | `?noite=1` | modo noturno |
 | `?preview=1` | enquadramento da miniatura, sem interface |
 | `?debug=1` | mostra FPS e expõe `window.__condo` para inspeção |

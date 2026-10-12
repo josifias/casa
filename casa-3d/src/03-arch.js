@@ -191,8 +191,8 @@ function buildArchitecture(house) {
   // ---------- paredes externas ----------
   const win = (a, b, y1 = 1.00, y2 = 2.20) => ({ a, b, y1, y2 });
   within(ARCH.ext.N, () => {
-    WALL(-T, -T, W_IN + T, 0, [win(.60, 1.80), win(2.90, 4.45), win(5.60, 6.80)]);
-    WINDOW('N', .60, 1.80, 1.00, 2.20); WINDOW('N', 2.90, 4.45, 1.00, 2.20); WINDOW('N', 5.60, 6.80, 1.00, 2.20);
+    WALL(-T, -T, W_IN + T, 0, [win(.60, 1.80), win(2.90, 4.45, SALA_SILL), win(5.60, 6.80)]);
+    WINDOW('N', .60, 1.80, 1.00, 2.20); WINDOW('N', 2.90, 4.45, SALA_SILL, 2.20); WINDOW('N', 5.60, 6.80, 1.00, 2.20);
     // cortineiros + voil (sala e casal), persiana (infantil)
     B(2.50, 2.32, 0, 4.90, 2.50, .15, M.oak, { cast: false });
     SHEER(2.56, 3.30, .03, 2.31, .075); SHEER(4.05, 4.86, .03, 2.31, .075);

@@ -362,10 +362,24 @@ lines_out = []
 for r in public:
     for ln in lines_of(r['L'].intersection(REG.buffer(10))):
         lines_out.append([r['w'], 1 if r['dirt'] else 0, enc_ring(list(ln.simplify(.5).coords))])
+def tiled(g, size=60):
+    """corta em ladrilhos: polígonos com centenas de furos (as quadras) quebram a triangulação no navegador"""
+    out = []
+    x0, z0, x1, z1 = REG.bounds
+    gx = x0
+    while gx < x1:
+        gz = z0
+        while gz < z1:
+            out += polys(g.intersection(box(gx, gz, gx + size, gz + size)))
+            gz += size
+        gx += size
+    return MultiPolygon([q for q in out if q.area > .3]) if out else Polygon()
+
+
 data = {
-    'asph': enc_multi(asph), 'dirt': enc_multi(dirt), 'walk': enc_multi(sidewalk),
+    'asph': enc_multi(tiled(asph)), 'dirt': enc_multi(tiled(dirt)), 'walk': enc_multi(tiled(sidewalk)),
     'blocks': [[1 if b['green'] else 0, enc_poly(b['g'])] for b in blk],
-    'water': enc_multi(water), 'green': enc_multi(greenU.difference(water) if not water.is_empty else greenU), 'paving': enc_multi(privU),
+    'water': enc_multi(tiled(water)), 'green': enc_multi(tiled(greenU.difference(water) if not water.is_empty else greenU)), 'paving': enc_multi(tiled(privU)),
     'pal': PAL,
     'bld': [[enc_ring(b['ring']), b['h'], PAL.index(b['c']), b['rc'], b['roof'], b['tank']] for b in blds],
     'fill': fills, 'rcs': RCS,

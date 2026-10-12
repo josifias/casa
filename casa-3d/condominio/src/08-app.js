@@ -107,6 +107,7 @@ function wideShadow() {
   renderer.shadowMap.needsUpdate = true;
 }
 function followShadow(force = false) {
+  if (INSIDE || CORE) return;
   if (!force && Math.hypot(walk.x - shadowAt.x, walk.z - shadowAt.z) < 10) return;
   shadowAt.set(walk.x, 0, walk.z);
   aimShadow(shadowAt, LOW_END ? 30 : 40);
@@ -115,6 +116,7 @@ function followShadow(force = false) {
 }
 
 function goAerea(instant = false) {
+  leaveBuilding();
   const p = aereaPose();
   setMode('aerea');
   controls.enabled = false; walkTarget = null;
@@ -123,6 +125,7 @@ function goAerea(instant = false) {
   else flyTo(p.pos, poseLookAt(p.pos, p.target), p.fov, 1.6, done);
 }
 function goPlanta(instant = false) {
+  leaveBuilding();
   const p = plantaPose();
   setMode('planta');
   controls.enabled = false; walkTarget = null;
@@ -132,6 +135,7 @@ function goPlanta(instant = false) {
   else flyTo(p.pos, q, p.fov, 1.4, done);
 }
 function goWalk(x, z, lx, lz, instant = false, yawOverride = null) {
+  leaveBuilding();
   const f = freeNear(x, z);
   if (!f) return;
   const yaw = yawOverride ?? Math.atan2(-(lx - f[0]), -(lz - f[1]));
@@ -211,6 +215,7 @@ const ICONS = {
   bldg: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M11 21v-3h2v3"/>',
   home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/>',
   road: '<path d="M7 3 4 21M17 3l3 18M12 4v2.5M12 10.5v3M12 17.5V20"/>',
+  door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M4 21h16M14.5 12.5v.01"/>',
 };
 const svgIcon = (k) => `<svg class="i" viewBox="0 0 24 24">${ICONS[k]}</svg>`;
 const cleanName = (n) => n.replace('-', '');
@@ -224,6 +229,11 @@ function buildThumbs() {
     b.addEventListener('click', () => goPlace(p.id));
     box.appendChild(b);
   }
+  const ap = document.createElement('button');
+  ap.className = 'thumb'; ap.id = 'thumbApto'; ap.title = 'Entrar em qualquer apartamento de qualquer bloco';
+  ap.innerHTML = `${svgIcon('door')}<span>Escolher apto</span>`;
+  ap.addEventListener('click', () => openAptoPicker());
+  box.appendChild(ap);
   const a = document.createElement('a');
   a.className = 'thumb link'; a.href = '../index.html'; a.title = 'Ver o apartamento tipo por dentro';
   a.innerHTML = `${svgIcon('home')}<span>Apartamento</span>`;
@@ -232,7 +242,7 @@ function buildThumbs() {
 let currentPlace = null;
 function updateThumbs() {
   let cur = null;
-  if (mode === 'passeio' && !tween) {
+  if (mode === 'passeio' && !tween && !INSIDE && !CORE) {
     let bd = 10;
     for (const p of PLACES) {
       const d = Math.min(Math.hypot(p.pos[0] - walk.x, p.pos[1] - walk.z), Math.hypot(p.look[0] - walk.x, p.look[1] - walk.z));
@@ -293,16 +303,17 @@ function updateMinimap() {
   const out = BAIRRO && mode === 'passeio' && (x < -8 || x > LOT_W + 8 || z < -8 || z > LOT_D + 8);
   const vb = out ? `${(x - 60).toFixed(1)} ${(z - 91).toFixed(1)} 120 183` : '-5 -5 92 140';
   if (vb !== lastVB) { lastVB = vb; $('miniSvg').setAttribute('viewBox', vb); }
-  const here = mode === 'passeio' ? placeName(x, z) : 'Vista geral';
+  const here = INSIDE ? `Apto ${INSIDE.num} · ${interiorRoom()}` : CORE ? `Bl. ${CORE.core.block} · ${CORE.flight == null ? floorName(CORE.k) : 'escada'}` : mode === 'passeio' ? placeName(x, z) : 'Vista geral';
   if (here !== lastHere) { lastHere = here; $('here').textContent = here; }
 }
 function miniClick(ev) {
   const svg = $('miniSvg'), pt = svg.createSVGPoint();
   pt.x = ev.clientX; pt.y = ev.clientY;
   const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  leaveBuilding();
   const free = freeNear(p.x, p.y);
   if (!free) return;
-  if (mode === 'passeio' && Math.hypot(free[0] - walk.x, free[1] - walk.z) < 25) { walkTarget = free; markInput(); invalidate(); return; }
+  if (mode === 'passeio' && !blocked(walk.x, walk.z) && Math.hypot(free[0] - walk.x, free[1] - walk.z) < 25) { walkTarget = free; markInput(); invalidate(); return; }
   const from = mode === 'passeio' ? [walk.x, walk.z] : [LOT_W / 2, LOT_D / 2];
   const dx = free[0] - from[0], dz = free[1] - from[1];
   goWalk(free[0], free[1], 0, 0, false, Math.hypot(dx, dz) > 1 ? Math.atan2(-dx, -dz) : 0);
@@ -326,7 +337,7 @@ function buildLabels() {
     const halves = b.dir === 'h'
       ? [[(r.x0 * 3 + r.x1) / 4, (r.z0 + r.z1) / 2], [(r.x0 + r.x1 * 3) / 4, (r.z0 + r.z1) / 2]]
       : [[(r.x0 + r.x1) / 2, (r.z0 * 3 + r.z1) / 4], [(r.x0 + r.x1) / 2, (r.z0 + r.z1 * 3) / 4]];
-    b.blocks.forEach((n, i) => add('Bloco ' + n, 'lab blk', halves[i][0], h, halves[i][1], 2, () => goBlock(b, i)));
+    b.blocks.forEach((n, i) => add('Bloco ' + n, 'lab blk', halves[i][0], h, halves[i][1], 2, () => openAptoPicker(n)));
   }
   for (const s of SPOTS) add(s.nome, 'lab', s.x, 2.2, s.z, 1, () => goSpot(s));
 }
@@ -381,6 +392,8 @@ function pickAt(cx, cy) {
 }
 function onTap(cx, cy) {
   if (tween) return;
+  if (INSIDE) { interiorTap(cx, cy); return; }
+  if (CORE) { coreTap(cx, cy); return; }
   const hit = pickAt(cx, cy);
   if (!hit) return;
   if (mode === 'passeio') {
@@ -436,7 +449,7 @@ function initButtons() {
 let frames = 0, fpsT = performance.now();
 function render() {
   renderer.render(scene, camera);
-  updateOverlays(); updateMinimap(); updateThumbs();
+  updateOverlays(); updateMinimap(); updateThumbs(); updateEnterBtn();
   if (PARAMS.has('debug')) {
     frames++;
     const now = performance.now();
@@ -454,6 +467,7 @@ function loop() {
     if (controls.update(dt)) active = true;
   }
   if (mode === 'passeio' && !tween && stepWalk(Math.min(raw, .1))) { applyWalkCamera(camera); followShadow(); active = true; }
+  if (stepInterior(Math.min(raw, .25))) active = true;
   if (updateSky(Math.min(raw, .1), camera, renderer)) active = true;
   if (active || needsRender) { render(); needsRender = false; }
 }
@@ -471,7 +485,7 @@ function boot() {
   if (PARAMS.has('preview')) document.body.classList.add('preview');
   if (IS_TOUCH) document.body.classList.add('touch');
   if (PARAMS.has('debug')) $('fps').style.display = 'block';
-  buildThumbs(); buildMinimap(); initButtons();
+  buildThumbs(); buildMinimap(); initButtons(); initInterior();
   if (PARAMS.has('noite')) { night = true; setNightTarget(true); $('bNight').setAttribute('aria-pressed', 'true'); }
   const modo = PARAMS.get('modo'), local = PARAMS.get('local');
   if (local) goPlace(local, true);
@@ -480,7 +494,9 @@ function boot() {
   else goAerea(true);
   updateSky(0, camera, renderer, true);
   addEventListener('resize', onResize);
-  if (PARAMS.has('debug')) window.__condo = { goWalk, goPlace, goBlock, goAerea, goPlanta, setNight, walk, blocked, freeNear, COLL, LAMPS, PLACES, camera, renderer, scene, onTap, rect: (i) => bRect(BUILDINGS[i]), blockDoors: () => BUILDINGS.flatMap((b) => b.blocks.map((n, i) => { const d = blockDoor(b, i); return [n, d.x, d.z]; })), get mode() { return mode; }, get tod() { return tod; }, get walkTarget() { return walkTarget; }, get tween() { return tween; } };
+  const ap = /^(\d{2})-(\d{3})$/.exec(PARAMS.get('apto') || '');   // ex.: ?apto=05-302
+  if (ap) enterApto(ap[1], +ap[2]);
+  if (PARAMS.has('debug')) window.__condo = { __setTarget: (p) => { walkTarget = p; }, project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; }, applyWalkCamera: () => applyWalkCamera(camera), get core() { return CORE; }, CORE_LIST, coreLevel, enterCore, exitBuilding, coreTap, enterApto, exitApto, openAptoPicker, aptoInfo, unitFrame, site, BUILDINGS, bRect, keys, stepWalk, stepInterior, probe: (x, y, z) => new THREE.Raycaster(new THREE.Vector3(x, y, z), new THREE.Vector3(0, -1, 0)).intersectObjects(scene.children, true).slice(0, 5).map((h) => [+h.point.y.toFixed(3), h.object.material.color ? h.object.material.color.getHexString() : "", h.object.material.map && h.object.material.map.image ? h.object.material.map.image.width : 0, h.object.parent === site ? "site" : h.object.parent === BAIRRO_GROUP ? "bairro" : "outro"]), get inside() { return INSIDE; }, goWalk, goPlace, goBlock, goAerea, goPlanta, setNight, walk, blocked, freeNear, COLL, LAMPS, PLACES, camera, renderer, scene, onTap, rect: (i) => bRect(BUILDINGS[i]), blockDoors: () => BUILDINGS.flatMap((b) => b.blocks.map((n, i) => { const d = blockDoor(b, i); return [n, d.x, d.z]; })), get mode() { return mode; }, get tod() { return tod; }, get walkTarget() { return walkTarget; }, get tween() { return tween; } };
   // compila os shaders sem travar a tela de carregamento (quando o navegador permite)
   const go = () => { loop(); requestAnimationFrame(() => requestAnimationFrame(() => { $('loader').classList.add('off'); window.__ready = true; })); };
   const c = renderer.compileAsync ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera));
