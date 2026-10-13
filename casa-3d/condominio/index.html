@@ -847,11 +847,14 @@ function genBuilding(b, R) {
   stripFlat(CORES[0][1], CORES[1][0], M.gravel, .08);
   // janela numa parede transversal do núcleo (a constante), voltada para s = ±1
   const AT = (a, s, d0, d1) => s > 0 ? [a + d0, a + d1] : [a - d1, a - d0];
-  const winT = (a, s, w, y0, y1, mat) => {
+  // janelão da escada: moldura vazada e vidro transparente (de dentro do hall dá para ver lá fora)
+  const winT = (a, s, w, y0, y1) => {
     const c0 = mid - w / 2, c1 = mid + w / 2;
-    let [p, q] = AT(a, s, 0, .07); LB(p, y0 - .06, c0 - .06, q, y1 + .06, c1 + .06, M.frame, NC);
-    [p, q] = AT(a, s, .07, .075); LB(p, y0 + .04, c0 + .04, q, y1 - .04, c1 - .04, mat, NC);
-    [p, q] = AT(a, s, .07, .085); LB(p, y0, mid - .025, q, y1, mid + .025, M.frame, NC);
+    let [p, q] = AT(a, s, 0, .07);
+    LB(p, y0 - .06, c0 - .06, q, y0 + .04, c1 + .06, M.frame, NC); LB(p, y1 - .04, c0 - .06, q, y1 + .06, c1 + .06, M.frame, NC);
+    LB(p, y0 + .04, c0 - .06, q, y1 - .04, c0 + .04, M.frame, NC); LB(p, y0 + .04, c1 - .04, q, y1 - .04, c1 + .06, M.frame, NC);
+    [p, q] = AT(a, s, .03, .036); LB(p, y0 + .04, c0 + .04, q, y1 - .04, c1 - .04, M.clearGlass, NC);
+    [p, q] = AT(a, s, 0, .07); LB(p, y0 + .04, mid - .025, q, y1 - .04, mid + .025, M.frame, NC);
     [p, q] = AT(a, s, 0, .13); LB(p, y0 - .1, c0 - .1, q, y0 - .04, c1 + .1, M.white, NC);
   };
   // ---------- interior do núcleo: halls, galeria, escada, portas numeradas ----------
@@ -931,8 +934,8 @@ function genBuilding(b, R) {
     // janelão da escada em cada andar, nas duas paredes de ponta do núcleo
     const out = i === 0 ? [a0, -1] : [a1, 1], inn = i === 0 ? [a1, 1] : [a0, -1];
     for (let k = 0; k < F; k++) {
-      winT(inn[0], inn[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3, M.glassLit);
-      if (k > 0) winT(out[0], out[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3, M.glassLit);
+      winT(inn[0], inn[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3);
+      if (k > 0) winT(out[0], out[1], 1.6, k * FLOOR_H + .9, k * FLOOR_H + 2.3);
     }
     // entrada do bloco: porta de vidro, marquise com luminária e placa
     const [e, s1] = out;
