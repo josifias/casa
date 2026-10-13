@@ -227,7 +227,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li><b>Vista aérea:</b> arraste para girar, pinça/roda para zoom. Toque num bloco ou área para descer até lá.</li>
       <li><b>Planta:</b> vista de cima com os nomes de cada bloco e área de lazer.</li>
       <li><b>Passeio:</b> arraste para olhar em volta e toque no chão para andar. No computador, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas andam e <kbd>Shift</kbd> corre; no celular, use o joystick (empurre até a borda para correr).</li>
-      <li><b>Prédios e apartamentos:</b> entre pela porta de vidro de qualquer bloco, suba a escada até o andar que quiser e toque na porta de um apartamento para entrar — dá para andar por dentro dele e ver o condomínio pelas janelas. Para sair, abra a porta de entrada do apartamento (você volta ao hall) e desça a escada até a rua. Nos térreos com garden, o portão do cercado e a porta de vidro da sala ficam entreabertos: dá para entrar e sair pelo garden. Atalhos: o botão <b>Apartamentos</b> perto da entrada, a miniatura <b>Escolher apto</b> ou o nome do bloco na vista aérea levam direto a qualquer apartamento.</li>
+      <li><b>Prédios e apartamentos:</b> entre pela porta de vidro de qualquer bloco, suba a escada até o andar que quiser e toque na porta de um apartamento para entrar — dá para andar por dentro dele e ver o condomínio pelas janelas. Para sair, abra a porta de entrada do apartamento (você volta ao hall) e desça a escada até a rua. Nos térreos com garden, a porta de vidro da sala fica meio aberta: dá para sair da sala para o garden e voltar. Atalhos: o botão <b>Apartamentos</b> perto da entrada, a miniatura <b>Escolher apto</b> ou o nome do bloco na vista aérea levam direto a qualquer apartamento.</li>
       <li>As miniaturas embaixo levam direto à portaria, piscina, salão, playground, praças e demais áreas. <kbd>N</kbd> alterna dia e noite.</li>
       <li>O botão <b>Música</b> (ou a tecla <kbd>M</kbd>) liga e desliga a música ambiente.</li>
     </ul>
@@ -987,17 +987,8 @@ function genBuilding(b, R) {
     for (let u = 0; u < 4; u++) {
       if (!hasGarden(b, row, u)) continue;
       const a0 = u * UNIT, a1 = a0 + UNIT, mir = u % 2 === 1, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
-      // portão de 1,10 m perto da porta da sala, deixado entreaberto (70°, para dentro do garden);
-      // a dobradiça fica do lado de longe da porta, então a folha aberta não atrapalha o caminho até ela
-      const gc = a0 + (mir ? 3.3 : 4.3), gA = gc - .55, gB = gc + .55, cl = cf + out * GD, sg = mir ? 1 : -1;
-      fence(a0, gA, e0, e1); fence(gB, a1, e0, e1);
-      collA(a0, e0, gA, e1); collA(gB, e0, a1, e1);
-      for (const g of [gA, gB]) { LB(g - .05, 0, Math.min(e0, e1) - .02, g + .05, 1.2, Math.max(e0, e1) + .02, M.darkMetal, NC); collA(g - .06, e0 - .03, g + .06, e1 + .03); }
-      const ha = mir ? gA + .07 : gB - .07, len = .96, ang = 70 * Math.PI / 180, da = sg * Math.cos(ang), dc = -out * Math.sin(ang);
-      const [hx, hz] = toLot(ha, cl), [ex, ez] = toLot(ha + da * len, cl + dc * len);
-      OB([hx, .62, hz], [ex, .62, ez], .025, .96, M.railing, NC);
-      for (const y of [.13, 1.1]) OB([hx, y, hz], [ex, y, ez], .04, .04, M.darkMetal, NC);
-      for (const f of [.15, .4, .65, .9]) { const [px, pz] = toLot(ha + da * len * f, cl + dc * len * f); addColl(px - .04, pz - .04, px + .04, pz + .04); }
+      // cercado fechado: o garden é privativo, só se chega a ele pela porta de vidro da sala
+      fence(a0, a1, e0, e1); collA(a0, e0, a1, e1);
       // divisas com os vizinhos
       fence(a0 - .07, a0 + .07, g0, g1); collA(a0 - .07, g0, a0 + .07, g1);
       if (u === 3 || !hasGarden(b, row, u + 1)) { fence(a1 - .07, a1 + .07, g0, g1); collA(a1 - .07, g0, a1 + .07, g1); }
@@ -1005,12 +996,12 @@ function genBuilding(b, R) {
       const [oa0, oa1] = mir ? [a0 + 3.825, a0 + 4.555] : [a0 + 3.045, a0 + 3.755];
       { const [x0, z0] = toLot(oa0 + .1, cf), [x1, z1] = toLot(oa1 - .1, cf + out * .6);
         GARDEN_DOORS.push({ block: b.blocks[u < 2 ? 0 : 1], num: 100 + UNIT_NUM[b.dir][row][u], x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1),
-          // pontos de passagem: gramado → portão → garden → porta da sala
-          path: [toLot(gc + sg * .19, cf + out * (GD + 1.2)), toLot(gc + sg * .19, cf + out * (GD - .9)), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
-      // umas plantas em alguns gardens (longe do portão)
+          // pontos para os testes: fora do cercado, no meio do garden e em frente à porta
+          path: [toLot((oa0 + oa1) / 2, cf + out * (GD + 1.2)), toLot(a0 + UNIT / 2, cf + out * 1.3), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
+      // umas plantas em alguns gardens (longe da porta da sala)
       for (let i = 0; i < 2; i++) if (R() < .45) {
         const pa = a0 + .6 + R() * (UNIT - 1.2);
-        if (Math.abs(pa - gc) < 1.1) continue;
+        if (Math.abs(pa - (oa0 + oa1) / 2) < 1.2 || Math.abs(pa - (a0 + UNIT / 2)) < .5) continue;
         const [px, pz] = toLot(pa, cf + out * (GD - .45));
         SP(px, .3, pz, .3 + R() * .2, R() < .25 ? M.leafPink : M.leafDark, { ico: true, sy: .8 });
         addColl(px - .3, pz - .3, px + .3, pz + .3);

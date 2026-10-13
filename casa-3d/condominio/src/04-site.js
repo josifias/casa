@@ -319,17 +319,8 @@ function genBuilding(b, R) {
     for (let u = 0; u < 4; u++) {
       if (!hasGarden(b, row, u)) continue;
       const a0 = u * UNIT, a1 = a0 + UNIT, mir = u % 2 === 1, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
-      // portão de 1,10 m perto da porta da sala, deixado entreaberto (70°, para dentro do garden);
-      // a dobradiça fica do lado de longe da porta, então a folha aberta não atrapalha o caminho até ela
-      const gc = a0 + (mir ? 3.3 : 4.3), gA = gc - .55, gB = gc + .55, cl = cf + out * GD, sg = mir ? 1 : -1;
-      fence(a0, gA, e0, e1); fence(gB, a1, e0, e1);
-      collA(a0, e0, gA, e1); collA(gB, e0, a1, e1);
-      for (const g of [gA, gB]) { LB(g - .05, 0, Math.min(e0, e1) - .02, g + .05, 1.2, Math.max(e0, e1) + .02, M.darkMetal, NC); collA(g - .06, e0 - .03, g + .06, e1 + .03); }
-      const ha = mir ? gA + .07 : gB - .07, len = .96, ang = 70 * Math.PI / 180, da = sg * Math.cos(ang), dc = -out * Math.sin(ang);
-      const [hx, hz] = toLot(ha, cl), [ex, ez] = toLot(ha + da * len, cl + dc * len);
-      OB([hx, .62, hz], [ex, .62, ez], .025, .96, M.railing, NC);
-      for (const y of [.13, 1.1]) OB([hx, y, hz], [ex, y, ez], .04, .04, M.darkMetal, NC);
-      for (const f of [.15, .4, .65, .9]) { const [px, pz] = toLot(ha + da * len * f, cl + dc * len * f); addColl(px - .04, pz - .04, px + .04, pz + .04); }
+      // cercado fechado: o garden é privativo, só se chega a ele pela porta de vidro da sala
+      fence(a0, a1, e0, e1); collA(a0, e0, a1, e1);
       // divisas com os vizinhos
       fence(a0 - .07, a0 + .07, g0, g1); collA(a0 - .07, g0, a0 + .07, g1);
       if (u === 3 || !hasGarden(b, row, u + 1)) { fence(a1 - .07, a1 + .07, g0, g1); collA(a1 - .07, g0, a1 + .07, g1); }
@@ -337,12 +328,12 @@ function genBuilding(b, R) {
       const [oa0, oa1] = mir ? [a0 + 3.825, a0 + 4.555] : [a0 + 3.045, a0 + 3.755];
       { const [x0, z0] = toLot(oa0 + .1, cf), [x1, z1] = toLot(oa1 - .1, cf + out * .6);
         GARDEN_DOORS.push({ block: b.blocks[u < 2 ? 0 : 1], num: 100 + UNIT_NUM[b.dir][row][u], x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1),
-          // pontos de passagem: gramado → portão → garden → porta da sala
-          path: [toLot(gc + sg * .19, cf + out * (GD + 1.2)), toLot(gc + sg * .19, cf + out * (GD - .9)), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
-      // umas plantas em alguns gardens (longe do portão)
+          // pontos para os testes: fora do cercado, no meio do garden e em frente à porta
+          path: [toLot((oa0 + oa1) / 2, cf + out * (GD + 1.2)), toLot(a0 + UNIT / 2, cf + out * 1.3), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
+      // umas plantas em alguns gardens (longe da porta da sala)
       for (let i = 0; i < 2; i++) if (R() < .45) {
         const pa = a0 + .6 + R() * (UNIT - 1.2);
-        if (Math.abs(pa - gc) < 1.1) continue;
+        if (Math.abs(pa - (oa0 + oa1) / 2) < 1.2 || Math.abs(pa - (a0 + UNIT / 2)) < .5) continue;
         const [px, pz] = toLot(pa, cf + out * (GD - .45));
         SP(px, .3, pz, .3 + R() * .2, R() < .25 ? M.leafPink : M.leafDark, { ico: true, sy: .8 });
         addColl(px - .3, pz - .3, px + .3, pz + .3);
