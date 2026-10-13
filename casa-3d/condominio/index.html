@@ -227,7 +227,7 @@ body.preview .top,body.preview .modes,body.preview .bottom,body.preview .mini,bo
       <li><b>Vista aérea:</b> arraste para girar, pinça/roda para zoom. Toque num bloco ou área para descer até lá.</li>
       <li><b>Planta:</b> vista de cima com os nomes de cada bloco e área de lazer.</li>
       <li><b>Passeio:</b> arraste para olhar em volta e toque no chão para andar. No computador, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas andam e <kbd>Shift</kbd> corre; no celular, use o joystick (empurre até a borda para correr).</li>
-      <li><b>Prédios e apartamentos:</b> entre pela porta de vidro de qualquer bloco, suba a escada até o andar que quiser e toque na porta de um apartamento para entrar — dá para andar por dentro dele e ver o condomínio pelas janelas. Para sair, abra a porta de entrada do apartamento (você volta ao hall) e desça a escada até a rua. Atalhos: o botão <b>Apartamentos</b> perto da entrada, a miniatura <b>Escolher apto</b> ou o nome do bloco na vista aérea levam direto a qualquer apartamento.</li>
+      <li><b>Prédios e apartamentos:</b> entre pela porta de vidro de qualquer bloco, suba a escada até o andar que quiser e toque na porta de um apartamento para entrar — dá para andar por dentro dele e ver o condomínio pelas janelas. Para sair, abra a porta de entrada do apartamento (você volta ao hall) e desça a escada até a rua. Nos térreos com garden, o portão do cercado e a porta de vidro da sala ficam entreabertos: dá para entrar e sair pelo garden. Atalhos: o botão <b>Apartamentos</b> perto da entrada, a miniatura <b>Escolher apto</b> ou o nome do bloco na vista aérea levam direto a qualquer apartamento.</li>
       <li>As miniaturas embaixo levam direto à portaria, piscina, salão, playground, praças e demais áreas. <kbd>N</kbd> alterna dia e noite.</li>
       <li>O botão <b>Música</b> (ou a tecla <kbd>M</kbd>) liga e desliga a música ambiente.</li>
     </ul>
@@ -786,6 +786,8 @@ const GARDENS = { '03': [3, 4], '04': [1, 2], '05': [1, 2], '11': [1, 2], '06': 
 const UNIT_NUM = { h: [[4, 3, 2, 1], [1, 2, 3, 4]], v: [[1, 2, 3, 4], [4, 3, 2, 1]] };
 // núcleos de escada de todos os blocos (preenchida em genBuilding; usada para entrar e subir)
 const CORE_LIST = [];
+// portas de vidro dos térreos com garden (zona logo em frente à metade aberta → entra no apartamento)
+const GARDEN_DOORS = [];
 // planta do núcleo, a partir da porta de entrada (s ao longo do prédio, t na largura de 2,80 m):
 // hall da entrada s 0–1,6 · escada s 1,6–5,6 (lado t 1,2–2,8) · galeria t 0–1,2 · hall do fundo s 5,6–7,2
 const CORE_ST0 = 1.6, CORE_ST1 = 5.6, CORE_GAL = 1.2, CORE_DOOR = [.7, 2.1];
@@ -823,6 +825,15 @@ function genBuilding(b, R) {
     P((a0 + a1) / 2 - .025, y0, (a0 + a1) / 2 + .025, y1, face, .085, M.frame, .07);
     P(a0 - .1, y0 - .1, a1 + .1, y0 - .04, face, .13, M.white);
   };
+  // porta de vidro da sala no térreo com garden: uma folha recolhida sobre a outra (metade aberta, escura)
+  const doorG = (face, a0, a1, y0, y1, openLow) => {
+    const m = (a0 + a1) / 2, [o0, o1] = openLow ? [a0 + .04, m] : [m, a1 - .04], [g0, g1] = openLow ? [m, a1 - .04] : [a0 + .04, m];
+    P(a0 - .06, y0 - .02, a1 + .06, y0 + .04, face, .07, M.frame); P(a0 - .06, y1 - .04, a1 + .06, y1 + .06, face, .07, M.frame);
+    P(a0 - .06, y0 + .04, a0 + .04, y1 - .04, face, .07, M.frame); P(a1 - .04, y0 + .04, a1 + .06, y1 - .04, face, .07, M.frame);
+    P(g0, y0 + .04, g1, y1 - .04, face, .075, M.glass, .07);
+    P(m - .025, y0, m + .025, y1, face, .085, M.frame, .07);
+    P(o0, y0 + .04, o1, y1 - .04, face, .012, C('#26231f', .9));
+  };
   for (let k = 0; k < F; k++) {
     const yb = k * FLOOR_H;
     for (let u = 0; u < 4; u++) {
@@ -833,7 +844,8 @@ function genBuilding(b, R) {
         const litSala = R() < .35, porta = k === 0 && hasGarden(b, row, u);
         for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) {
           const [p0, p1] = span(a0, a1);
-          win(outer, p0, p1, yb + (sala && porta ? .15 : 1), yb + 2.2, sala ? litSala : R() < .3);
+          if (sala && porta) doorG(outer, p0, p1, yb + .15, yb + 2.2, !mir);
+          else win(outer, p0, p1, yb + 1, yb + 2.2, sala ? litSala : R() < .3);
         }
       }
       [FACES[1], FACES[2]].forEach((inner, row) => { TAG = unitTag(b, row, k, u); const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); });
@@ -971,17 +983,37 @@ function genBuilding(b, R) {
       const m = (e0 + e1) / 2, w = Math.abs(a1 - a0) > Math.abs(e1 - e0);
       if (w) LB(a0, .3, m - .01, a1, 1.1, m + .01, M.railing, NC); else LB((a0 + a1) / 2 - .01, .3, e0, (a0 + a1) / 2 + .01, 1.1, e1, M.railing, NC);
     };
+    const collA = (a0, c0, a1, c1) => { const [x0, z0] = toLot(a0, c0), [x1, z1] = toLot(a1, c1); addColl(x0, z0, x1, z1); };
     for (let u = 0; u < 4; u++) {
       if (!hasGarden(b, row, u)) continue;
-      const a0 = u * UNIT, a1 = a0 + UNIT, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
-      fence(a0, a1, e0, e1);
-      fence(a0 - .07, a0 + .07, g0, g1);
-      if (u === 3 || !hasGarden(b, row, u + 1)) fence(a1 - .07, a1 + .07, g0, g1);
-      const [x0, z0] = toLot(a0, g0), [x1, z1] = toLot(a1, g1); addColl(x0, z0, x1, z1);
-      // umas plantas em alguns gardens
+      const a0 = u * UNIT, a1 = a0 + UNIT, mir = u % 2 === 1, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
+      // portão de 1,10 m perto da porta da sala, deixado entreaberto (70°, para dentro do garden);
+      // a dobradiça fica do lado de longe da porta, então a folha aberta não atrapalha o caminho até ela
+      const gc = a0 + (mir ? 3.3 : 4.3), gA = gc - .55, gB = gc + .55, cl = cf + out * GD, sg = mir ? 1 : -1;
+      fence(a0, gA, e0, e1); fence(gB, a1, e0, e1);
+      collA(a0, e0, gA, e1); collA(gB, e0, a1, e1);
+      for (const g of [gA, gB]) { LB(g - .05, 0, Math.min(e0, e1) - .02, g + .05, 1.2, Math.max(e0, e1) + .02, M.darkMetal, NC); collA(g - .06, e0 - .03, g + .06, e1 + .03); }
+      const ha = mir ? gA + .07 : gB - .07, len = .96, ang = 70 * Math.PI / 180, da = sg * Math.cos(ang), dc = -out * Math.sin(ang);
+      const [hx, hz] = toLot(ha, cl), [ex, ez] = toLot(ha + da * len, cl + dc * len);
+      OB([hx, .62, hz], [ex, .62, ez], .025, .96, M.railing, NC);
+      for (const y of [.13, 1.1]) OB([hx, y, hz], [ex, y, ez], .04, .04, M.darkMetal, NC);
+      for (const f of [.15, .4, .65, .9]) { const [px, pz] = toLot(ha + da * len * f, cl + dc * len * f); addColl(px - .04, pz - .04, px + .04, pz + .04); }
+      // divisas com os vizinhos
+      fence(a0 - .07, a0 + .07, g0, g1); collA(a0 - .07, g0, a0 + .07, g1);
+      if (u === 3 || !hasGarden(b, row, u + 1)) { fence(a1 - .07, a1 + .07, g0, g1); collA(a1 - .07, g0, a1 + .07, g1); }
+      // zona em frente à metade aberta da porta da sala: entrando nela, o visitante entra no apartamento
+      const [oa0, oa1] = mir ? [a0 + 3.825, a0 + 4.555] : [a0 + 3.045, a0 + 3.755];
+      { const [x0, z0] = toLot(oa0 + .1, cf), [x1, z1] = toLot(oa1 - .1, cf + out * .6);
+        GARDEN_DOORS.push({ block: b.blocks[u < 2 ? 0 : 1], num: 100 + UNIT_NUM[b.dir][row][u], x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1),
+          // pontos de passagem: gramado → portão → garden → porta da sala
+          path: [toLot(gc + sg * .19, cf + out * (GD + 1.2)), toLot(gc + sg * .19, cf + out * (GD - .9)), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
+      // umas plantas em alguns gardens (longe do portão)
       for (let i = 0; i < 2; i++) if (R() < .45) {
-        const [px, pz] = toLot(a0 + .6 + R() * (UNIT - 1.2), cf + out * (GD - .45));
+        const pa = a0 + .6 + R() * (UNIT - 1.2);
+        if (Math.abs(pa - gc) < 1.1) continue;
+        const [px, pz] = toLot(pa, cf + out * (GD - .45));
         SP(px, .3, pz, .3 + R() * .2, R() < .25 ? M.leafPink : M.leafDark, { ico: true, sy: .8 });
+        addColl(px - .3, pz - .3, px + .3, pz + .3);
       }
     }
   });
@@ -2014,8 +2046,8 @@ async function enterApto(block, num, opts = {}) {
     setTagHidden(tag, true);
     INSIDE = { ...info, fr, v, tag, style };
     if (glowMesh) glowMesh.visible = info.k > 0;   // manchas de luz dos postes ficam no chão do térreo
-    // começa no hall de entrada, olhando para a sala (como na página do apartamento)
-    const e = KIT.VIEWS[0], p = fr.toW(e.pos[0], e.pos[1]), l = fr.toW(e.look[0], e.look[1]);
+    // começa no hall de entrada, olhando para a sala (ou na sala, quando entra pela porta do garden)
+    const e = opts.start ? { pos: opts.start.slice(0, 2), look: opts.start.slice(2) } : KIT.VIEWS[0], p = fr.toW(e.pos[0], e.pos[1]), l = fr.toW(e.look[0], e.look[1]);
     tween = null; walkTarget = null; controls.enabled = false;
     setMode('passeio');
     Object.assign(walk, { x: p[0], z: p[1], yaw: Math.atan2(-(l[0] - p[0]), -(l[1] - p[1])), pitch: -.08, fov: IS_TOUCH && innerWidth < innerHeight ? 82 : 74 });
@@ -2205,9 +2237,33 @@ async function exitBuilding() {
 }
 
 
+// ---------- porta do garden (térreos com garden) ----------
+let gardenCooldown = 0;
+function maybeEnterGarden() {
+  if (performance.now() < gardenCooldown) return;
+  for (const g of GARDEN_DOORS) if (walk.x > g.x0 && walk.x < g.x1 && walk.z > g.z0 && walk.z < g.z1) {
+    gardenCooldown = performance.now() + 3000;
+    enterApto(g.block, g.num, { start: [3.3, .55, 3.3, 3.0] });   // entra na sala, olhando para dentro
+    return;
+  }
+}
+async function exitToGarden() {
+  if (!INSIDE || INSIDE.leaving) return;
+  INSIDE.leaving = true;
+  await fadeTo(true);
+  const fr = INSIDE.fr, p = fr.toW(3.3, -1.0), l = fr.toW(3.3, -4);
+  gardenCooldown = performance.now() + 2500;
+  leaveInterior();
+  goWalk(p[0], p[1], l[0], l[1], true);
+  await frame2();
+  await fadeTo(false);
+}
+
 // ---------- caminhar dentro do apartamento ----------
 function interiorBlocked(x, z) {
   const [X, Z] = INSIDE.fr.toL(x, z), R = APTO_R;
+  // térreo com garden: pela metade aberta da porta de vidro da sala dá para sair para o garden
+  if (INSIDE.garden && X > 2.95 + R && X < 3.65 - R && Z < R + .05) return Z < -.45;
   // com a porta de entrada aberta dá para chegar à soleira e sair
   const door = INSIDE.v.doors.find((d) => d.name === 'entrada');
   if (door && door.isOpen && X > 4.30 + R && X < 5.10 - R && Z > KIT.D_IN - R - .05) return Z > KIT.D_IN + .3;
@@ -2228,7 +2284,9 @@ function stepInterior(dt) {
     if (Math.abs(d.angle - target) > 1e-3) { const sp = (d.speed || 2.6) * dt; d.angle += clamp(target - d.angle, -sp, sp); d.apply(d.angle); moving = true; }
   }
   if (moving) renderer.shadowMap.needsUpdate = true;
-  if (INSIDE.fr.toL(walk.x, walk.z)[1] > KIT.D_IN + .05) exitApto();   // passou pela porta de entrada
+  const Zp = INSIDE.fr.toL(walk.x, walk.z)[1];
+  if (Zp > KIT.D_IN + .05) exitApto();                  // passou pela porta de entrada
+  else if (INSIDE.garden && Zp < -.1) exitToGarden();   // saiu pela porta do garden
   return moving;
 }
 function interiorTap(cx, cy) {
@@ -2330,7 +2388,7 @@ const walk = { x: 0, z: 0, yaw: 0, pitch: -.05, fov: 70 };
 const keys = {};
 const joy = { x: 0, y: 0, active: false };
 let walkTarget = null, lastInput = performance.now();
-const R_PLAYER = .3;
+const R_PLAYER = .25;
 
 function blocked(x, z) {
   if (INSIDE) return interiorBlocked(x, z);   // dentro de um apartamento
@@ -2373,7 +2431,7 @@ function tryMove(dx, dz) {
     if (dz && !blocked(walk.x, walk.z + dz / n)) { walk.z += dz / n; m = true; }
     if (!m) break;
     moved = true;
-    if (CORE) coreUpdate(); else if (!INSIDE) maybeEnterCore();
+    if (CORE) coreUpdate(); else if (!INSIDE) { maybeEnterCore(); maybeEnterGarden(); }
   }
   return moved;
 }
@@ -2970,7 +3028,7 @@ function boot() {
   addEventListener('resize', onResize);
   const ap = /^(\d{2})-(\d{3})$/.exec(PARAMS.get('apto') || '');   // ex.: ?apto=05-302
   if (ap) enterApto(ap[1], +ap[2]);
-  if (PARAMS.has('debug')) window.__condo = { __setTarget: (p) => { walkTarget = p; }, project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; }, applyWalkCamera: () => applyWalkCamera(camera), get core() { return CORE; }, CORE_LIST, coreLevel, enterCore, exitBuilding, coreTap, enterApto, exitApto, openAptoPicker, aptoInfo, unitFrame, site, BUILDINGS, bRect, keys, stepWalk, stepInterior, probe: (x, y, z) => new THREE.Raycaster(new THREE.Vector3(x, y, z), new THREE.Vector3(0, -1, 0)).intersectObjects(scene.children, true).slice(0, 5).map((h) => [+h.point.y.toFixed(3), h.object.material.color ? h.object.material.color.getHexString() : "", h.object.material.map && h.object.material.map.image ? h.object.material.map.image.width : 0, h.object.parent === site ? "site" : h.object.parent === BAIRRO_GROUP ? "bairro" : "outro"]), get inside() { return INSIDE; }, goWalk, goPlace, goBlock, goAerea, goPlanta, setNight, walk, blocked, freeNear, COLL, LAMPS, PLACES, camera, renderer, scene, onTap, rect: (i) => bRect(BUILDINGS[i]), blockDoors: () => BUILDINGS.flatMap((b) => b.blocks.map((n, i) => { const d = blockDoor(b, i); return [n, d.x, d.z]; })), get mode() { return mode; }, get tod() { return tod; }, get walkTarget() { return walkTarget; }, get tween() { return tween; } };
+  if (PARAMS.has('debug')) window.__condo = { GARDEN_DOORS, __setTarget: (p) => { walkTarget = p; }, project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; }, applyWalkCamera: () => applyWalkCamera(camera), get core() { return CORE; }, CORE_LIST, coreLevel, enterCore, exitBuilding, coreTap, enterApto, exitApto, openAptoPicker, aptoInfo, unitFrame, site, BUILDINGS, bRect, keys, stepWalk, stepInterior, probe: (x, y, z) => new THREE.Raycaster(new THREE.Vector3(x, y, z), new THREE.Vector3(0, -1, 0)).intersectObjects(scene.children, true).slice(0, 5).map((h) => [+h.point.y.toFixed(3), h.object.material.color ? h.object.material.color.getHexString() : "", h.object.material.map && h.object.material.map.image ? h.object.material.map.image.width : 0, h.object.parent === site ? "site" : h.object.parent === BAIRRO_GROUP ? "bairro" : "outro"]), get inside() { return INSIDE; }, goWalk, goPlace, goBlock, goAerea, goPlanta, setNight, walk, blocked, freeNear, COLL, LAMPS, PLACES, camera, renderer, scene, onTap, rect: (i) => bRect(BUILDINGS[i]), blockDoors: () => BUILDINGS.flatMap((b) => b.blocks.map((n, i) => { const d = blockDoor(b, i); return [n, d.x, d.z]; })), get mode() { return mode; }, get tod() { return tod; }, get walkTarget() { return walkTarget; }, get tween() { return tween; } };
   // compila os shaders sem travar a tela de carregamento (quando o navegador permite)
   const go = () => { loop(); requestAnimationFrame(() => requestAnimationFrame(() => { $('loader').classList.add('off'); window.__ready = true; })); };
   const c = renderer.compileAsync ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera));
@@ -3671,7 +3729,8 @@ function SLIDE_DOOR({ wallC, a1, a2, side, park = 1, name, open = true }) {
 }
 
 // Janela de correr com 2 folhas. wall: 'N'|'S'. a1..a2 ao longo de X.
-function WINDOW(wall, a1, a2, y1, y2) {
+// openLeft: a folha da esquerda fica recolhida atrás da outra (porta de correr meio aberta)
+function WINDOW(wall, a1, a2, y1, y2, openLeft = false) {
   const zc = wall === 'N' ? -T / 2 : D_IN + T / 2;
   const inward = wall === 'N' ? 1 : -1;
   const f = .045, dz = .03;
@@ -3680,7 +3739,8 @@ function WINDOW(wall, a1, a2, y1, y2) {
   fb(a1, y1, a1 + f, y2); fb(a2 - f, y1, a2, y2);
   const mid = (a1 + a2) / 2;
   fb(mid - .02, y1, mid + .02, y2);
-  for (const [p1, p2, off] of [[a1 + f, mid + .02, -.012], [mid - .02, a2 - f, .012]]) {
+  const wl = mid + .02 - (a1 + f);
+  for (const [p1, p2, off] of [openLeft ? [mid - .02, mid - .02 + wl, -.012] : [a1 + f, mid + .02, -.012], [mid - .02, a2 - f, .012]]) {
     const g = new THREE.PlaneGeometry(p2 - p1, y2 - y1 - 2 * f);
     g.translate((p1 + p2) / 2, (y1 + y2) / 2, zc + off);
     addMesh(g, M.glass, { cast: false, receive: false });
@@ -3739,12 +3799,13 @@ function buildArchitecture(house) {
 
   // ---------- paredes externas ----------
   const win = (a, b, y1 = 1.00, y2 = 2.20) => ({ a, b, y1, y2 });
+  const GARDEN = SALA_SILL < .5;   // térreo com garden: porta de vidro na sala, com a folha da esquerda aberta
   within(ARCH.ext.N, () => {
     WALL(-T, -T, W_IN + T, 0, [win(.60, 1.80), win(2.90, 4.45, SALA_SILL), win(5.60, 6.80)]);
-    WINDOW('N', .60, 1.80, 1.00, 2.20); WINDOW('N', 2.90, 4.45, SALA_SILL, 2.20); WINDOW('N', 5.60, 6.80, 1.00, 2.20);
+    WINDOW('N', .60, 1.80, 1.00, 2.20); WINDOW('N', 2.90, 4.45, SALA_SILL, 2.20, GARDEN); WINDOW('N', 5.60, 6.80, 1.00, 2.20);
     // cortineiros + voil (sala e casal), persiana (infantil)
     B(2.50, 2.32, 0, 4.90, 2.50, .15, M.oak, { cast: false });
-    SHEER(2.56, 3.30, .03, 2.31, .075); SHEER(4.05, 4.86, .03, 2.31, .075);
+    SHEER(2.56, GARDEN ? 2.92 : 3.30, .03, 2.31, .075); SHEER(4.05, 4.86, .03, 2.31, .075);   // no garden o voil fica recolhido
     B(5.00, 2.32, 0, 7.40, 2.50, .15, M.oak, { cast: false });
     SHEER(5.06, 5.75, .03, 2.31, .075); SHEER(6.62, 7.36, .03, 2.31, .075);
     B(.94, 2.22, 0, 1.86, 2.30, .10, M.oak, { cast: false });

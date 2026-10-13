@@ -89,8 +89,8 @@ async function enterApto(block, num, opts = {}) {
     setTagHidden(tag, true);
     INSIDE = { ...info, fr, v, tag, style };
     if (glowMesh) glowMesh.visible = info.k > 0;   // manchas de luz dos postes ficam no chão do térreo
-    // começa no hall de entrada, olhando para a sala (como na página do apartamento)
-    const e = KIT.VIEWS[0], p = fr.toW(e.pos[0], e.pos[1]), l = fr.toW(e.look[0], e.look[1]);
+    // começa no hall de entrada, olhando para a sala (ou na sala, quando entra pela porta do garden)
+    const e = opts.start ? { pos: opts.start.slice(0, 2), look: opts.start.slice(2) } : KIT.VIEWS[0], p = fr.toW(e.pos[0], e.pos[1]), l = fr.toW(e.look[0], e.look[1]);
     tween = null; walkTarget = null; controls.enabled = false;
     setMode('passeio');
     Object.assign(walk, { x: p[0], z: p[1], yaw: Math.atan2(-(l[0] - p[0]), -(l[1] - p[1])), pitch: -.08, fov: IS_TOUCH && innerWidth < innerHeight ? 82 : 74 });
@@ -280,9 +280,33 @@ async function exitBuilding() {
 }
 
 
+// ---------- porta do garden (térreos com garden) ----------
+let gardenCooldown = 0;
+function maybeEnterGarden() {
+  if (performance.now() < gardenCooldown) return;
+  for (const g of GARDEN_DOORS) if (walk.x > g.x0 && walk.x < g.x1 && walk.z > g.z0 && walk.z < g.z1) {
+    gardenCooldown = performance.now() + 3000;
+    enterApto(g.block, g.num, { start: [3.3, .55, 3.3, 3.0] });   // entra na sala, olhando para dentro
+    return;
+  }
+}
+async function exitToGarden() {
+  if (!INSIDE || INSIDE.leaving) return;
+  INSIDE.leaving = true;
+  await fadeTo(true);
+  const fr = INSIDE.fr, p = fr.toW(3.3, -1.0), l = fr.toW(3.3, -4);
+  gardenCooldown = performance.now() + 2500;
+  leaveInterior();
+  goWalk(p[0], p[1], l[0], l[1], true);
+  await frame2();
+  await fadeTo(false);
+}
+
 // ---------- caminhar dentro do apartamento ----------
 function interiorBlocked(x, z) {
   const [X, Z] = INSIDE.fr.toL(x, z), R = APTO_R;
+  // térreo com garden: pela metade aberta da porta de vidro da sala dá para sair para o garden
+  if (INSIDE.garden && X > 2.95 + R && X < 3.65 - R && Z < R + .05) return Z < -.45;
   // com a porta de entrada aberta dá para chegar à soleira e sair
   const door = INSIDE.v.doors.find((d) => d.name === 'entrada');
   if (door && door.isOpen && X > 4.30 + R && X < 5.10 - R && Z > KIT.D_IN - R - .05) return Z > KIT.D_IN + .3;
@@ -303,7 +327,9 @@ function stepInterior(dt) {
     if (Math.abs(d.angle - target) > 1e-3) { const sp = (d.speed || 2.6) * dt; d.angle += clamp(target - d.angle, -sp, sp); d.apply(d.angle); moving = true; }
   }
   if (moving) renderer.shadowMap.needsUpdate = true;
-  if (INSIDE.fr.toL(walk.x, walk.z)[1] > KIT.D_IN + .05) exitApto();   // passou pela porta de entrada
+  const Zp = INSIDE.fr.toL(walk.x, walk.z)[1];
+  if (Zp > KIT.D_IN + .05) exitApto();                  // passou pela porta de entrada
+  else if (INSIDE.garden && Zp < -.1) exitToGarden();   // saiu pela porta do garden
   return moving;
 }
 function interiorTap(cx, cy) {

@@ -118,6 +118,8 @@ const GARDENS = { '03': [3, 4], '04': [1, 2], '05': [1, 2], '11': [1, 2], '06': 
 const UNIT_NUM = { h: [[4, 3, 2, 1], [1, 2, 3, 4]], v: [[1, 2, 3, 4], [4, 3, 2, 1]] };
 // núcleos de escada de todos os blocos (preenchida em genBuilding; usada para entrar e subir)
 const CORE_LIST = [];
+// portas de vidro dos térreos com garden (zona logo em frente à metade aberta → entra no apartamento)
+const GARDEN_DOORS = [];
 // planta do núcleo, a partir da porta de entrada (s ao longo do prédio, t na largura de 2,80 m):
 // hall da entrada s 0–1,6 · escada s 1,6–5,6 (lado t 1,2–2,8) · galeria t 0–1,2 · hall do fundo s 5,6–7,2
 const CORE_ST0 = 1.6, CORE_ST1 = 5.6, CORE_GAL = 1.2, CORE_DOOR = [.7, 2.1];
@@ -155,6 +157,15 @@ function genBuilding(b, R) {
     P((a0 + a1) / 2 - .025, y0, (a0 + a1) / 2 + .025, y1, face, .085, M.frame, .07);
     P(a0 - .1, y0 - .1, a1 + .1, y0 - .04, face, .13, M.white);
   };
+  // porta de vidro da sala no térreo com garden: uma folha recolhida sobre a outra (metade aberta, escura)
+  const doorG = (face, a0, a1, y0, y1, openLow) => {
+    const m = (a0 + a1) / 2, [o0, o1] = openLow ? [a0 + .04, m] : [m, a1 - .04], [g0, g1] = openLow ? [m, a1 - .04] : [a0 + .04, m];
+    P(a0 - .06, y0 - .02, a1 + .06, y0 + .04, face, .07, M.frame); P(a0 - .06, y1 - .04, a1 + .06, y1 + .06, face, .07, M.frame);
+    P(a0 - .06, y0 + .04, a0 + .04, y1 - .04, face, .07, M.frame); P(a1 - .04, y0 + .04, a1 + .06, y1 - .04, face, .07, M.frame);
+    P(g0, y0 + .04, g1, y1 - .04, face, .075, M.glass, .07);
+    P(m - .025, y0, m + .025, y1, face, .085, M.frame, .07);
+    P(o0, y0 + .04, o1, y1 - .04, face, .012, C('#26231f', .9));
+  };
   for (let k = 0; k < F; k++) {
     const yb = k * FLOOR_H;
     for (let u = 0; u < 4; u++) {
@@ -165,7 +176,8 @@ function genBuilding(b, R) {
         const litSala = R() < .35, porta = k === 0 && hasGarden(b, row, u);
         for (const [a0, a1, sala] of [[.7, 1.9, 0], [3.0, 4.55, 1], [5.7, 6.9, 0]]) {
           const [p0, p1] = span(a0, a1);
-          win(outer, p0, p1, yb + (sala && porta ? .15 : 1), yb + 2.2, sala ? litSala : R() < .3);
+          if (sala && porta) doorG(outer, p0, p1, yb + .15, yb + 2.2, !mir);
+          else win(outer, p0, p1, yb + 1, yb + 2.2, sala ? litSala : R() < .3);
         }
       }
       [FACES[1], FACES[2]].forEach((inner, row) => { TAG = unitTag(b, row, k, u); const [s0, s1] = span(.37, 1.38); win(inner, s0, s1, yb + 1.5, yb + 2.1, false); });
@@ -303,17 +315,37 @@ function genBuilding(b, R) {
       const m = (e0 + e1) / 2, w = Math.abs(a1 - a0) > Math.abs(e1 - e0);
       if (w) LB(a0, .3, m - .01, a1, 1.1, m + .01, M.railing, NC); else LB((a0 + a1) / 2 - .01, .3, e0, (a0 + a1) / 2 + .01, 1.1, e1, M.railing, NC);
     };
+    const collA = (a0, c0, a1, c1) => { const [x0, z0] = toLot(a0, c0), [x1, z1] = toLot(a1, c1); addColl(x0, z0, x1, z1); };
     for (let u = 0; u < 4; u++) {
       if (!hasGarden(b, row, u)) continue;
-      const a0 = u * UNIT, a1 = a0 + UNIT, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
-      fence(a0, a1, e0, e1);
-      fence(a0 - .07, a0 + .07, g0, g1);
-      if (u === 3 || !hasGarden(b, row, u + 1)) fence(a1 - .07, a1 + .07, g0, g1);
-      const [x0, z0] = toLot(a0, g0), [x1, z1] = toLot(a1, g1); addColl(x0, z0, x1, z1);
-      // umas plantas em alguns gardens
+      const a0 = u * UNIT, a1 = a0 + UNIT, mir = u % 2 === 1, [g0, g1] = band(0, GD), [e0, e1] = band(GD - .08, GD + .08);
+      // portão de 1,10 m perto da porta da sala, deixado entreaberto (70°, para dentro do garden);
+      // a dobradiça fica do lado de longe da porta, então a folha aberta não atrapalha o caminho até ela
+      const gc = a0 + (mir ? 3.3 : 4.3), gA = gc - .55, gB = gc + .55, cl = cf + out * GD, sg = mir ? 1 : -1;
+      fence(a0, gA, e0, e1); fence(gB, a1, e0, e1);
+      collA(a0, e0, gA, e1); collA(gB, e0, a1, e1);
+      for (const g of [gA, gB]) { LB(g - .05, 0, Math.min(e0, e1) - .02, g + .05, 1.2, Math.max(e0, e1) + .02, M.darkMetal, NC); collA(g - .06, e0 - .03, g + .06, e1 + .03); }
+      const ha = mir ? gA + .07 : gB - .07, len = .96, ang = 70 * Math.PI / 180, da = sg * Math.cos(ang), dc = -out * Math.sin(ang);
+      const [hx, hz] = toLot(ha, cl), [ex, ez] = toLot(ha + da * len, cl + dc * len);
+      OB([hx, .62, hz], [ex, .62, ez], .025, .96, M.railing, NC);
+      for (const y of [.13, 1.1]) OB([hx, y, hz], [ex, y, ez], .04, .04, M.darkMetal, NC);
+      for (const f of [.15, .4, .65, .9]) { const [px, pz] = toLot(ha + da * len * f, cl + dc * len * f); addColl(px - .04, pz - .04, px + .04, pz + .04); }
+      // divisas com os vizinhos
+      fence(a0 - .07, a0 + .07, g0, g1); collA(a0 - .07, g0, a0 + .07, g1);
+      if (u === 3 || !hasGarden(b, row, u + 1)) { fence(a1 - .07, a1 + .07, g0, g1); collA(a1 - .07, g0, a1 + .07, g1); }
+      // zona em frente à metade aberta da porta da sala: entrando nela, o visitante entra no apartamento
+      const [oa0, oa1] = mir ? [a0 + 3.825, a0 + 4.555] : [a0 + 3.045, a0 + 3.755];
+      { const [x0, z0] = toLot(oa0 + .1, cf), [x1, z1] = toLot(oa1 - .1, cf + out * .6);
+        GARDEN_DOORS.push({ block: b.blocks[u < 2 ? 0 : 1], num: 100 + UNIT_NUM[b.dir][row][u], x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1),
+          // pontos de passagem: gramado → portão → garden → porta da sala
+          path: [toLot(gc + sg * .19, cf + out * (GD + 1.2)), toLot(gc + sg * .19, cf + out * (GD - .9)), toLot((oa0 + oa1) / 2, cf + out * .9)] }); }
+      // umas plantas em alguns gardens (longe do portão)
       for (let i = 0; i < 2; i++) if (R() < .45) {
-        const [px, pz] = toLot(a0 + .6 + R() * (UNIT - 1.2), cf + out * (GD - .45));
+        const pa = a0 + .6 + R() * (UNIT - 1.2);
+        if (Math.abs(pa - gc) < 1.1) continue;
+        const [px, pz] = toLot(pa, cf + out * (GD - .45));
         SP(px, .3, pz, .3 + R() * .2, R() < .25 ? M.leafPink : M.leafDark, { ico: true, sy: .8 });
+        addColl(px - .3, pz - .3, px + .3, pz + .3);
       }
     }
   });

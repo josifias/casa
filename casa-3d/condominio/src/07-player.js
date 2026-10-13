@@ -5,7 +5,7 @@ const walk = { x: 0, z: 0, yaw: 0, pitch: -.05, fov: 70 };
 const keys = {};
 const joy = { x: 0, y: 0, active: false };
 let walkTarget = null, lastInput = performance.now();
-const R_PLAYER = .3;
+const R_PLAYER = .25;
 
 function blocked(x, z) {
   if (INSIDE) return interiorBlocked(x, z);   // dentro de um apartamento
@@ -48,7 +48,7 @@ function tryMove(dx, dz) {
     if (dz && !blocked(walk.x, walk.z + dz / n)) { walk.z += dz / n; m = true; }
     if (!m) break;
     moved = true;
-    if (CORE) coreUpdate(); else if (!INSIDE) maybeEnterCore();
+    if (CORE) coreUpdate(); else if (!INSIDE) { maybeEnterCore(); maybeEnterGarden(); }
   }
   return moved;
 }
