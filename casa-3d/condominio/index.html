@@ -1928,7 +1928,7 @@ function updateSky(dt, camera, renderer, instant = false) {
 // prédio; nas unidades espelhadas a planta vem espelhada. Pelas janelas aparece o condomínio real.
 let KIT = null, INSIDE = null, pickBlock = '01', ROOM_ENV = null, SKY_ENV = null;
 const APTO_VARIANTS = {};                 // 'normal' e 'garden' (térreo: janela da sala vira porta)
-const APTO_EYE = 1.55, APTO_R = .2;
+const APTO_EYE = 1.55, APTO_R = .18;
 const APTO_FILLS = [[3.70, 2.25, 1.60], [6.20, 2.25, 1.40], [1.40, 2.25, 1.40], [2.60, 2.25, 3.85], [6.30, 2.25, 3.85], [4.55, 1.45, 1.85]];
 const floorName = (k) => k === 0 ? 'Térreo' : `${k + 1}º pavimento`;
 
@@ -3876,13 +3876,17 @@ function buildSala() {
   // ---- jantar ----
   const tx1 = 2.60, tx2 = 3.76, tz1 = 2.14, tz2 = 2.98, ty = .76;
   B(tx1, ty - .012, tz1, tx2, ty, tz2, M.glass, { cast: false, receive: false });
-  addColl(2.58, 1.66, 3.74, 3.46);
+  // mesa e cadeiras com colisões separadas (as cadeiras ficam encaixadas sob o tampo) — sobra passagem
+  // entre as cadeiras e o sofá até a frente da sala e o quarto infantil
+  const CH_N = 2.05, CH_S = 3.07;
+  addColl(tx1 - .02, tz1 - .02, tx2 + .02, tz2);
+  for (const x of [2.90, 3.46]) { addColl(x - .2, CH_N - .25, x + .2, tz1); addColl(x - .2, tz2, x + .2, CH_S + .25); }
   within(STYLE.tour, () => {
     for (const [x1, z1, x2, z2] of [[tx1 + .02, tz1 + .02, tx2 - .02, tz1 + .045], [tx1 + .02, tz2 - .045, tx2 - .02, tz2 - .02], [tx1 + .02, tz1 + .02, tx1 + .045, tz2 - .02], [tx2 - .045, tz1 + .02, tx2 - .02, tz2 - .02]]) B(x1, ty - .045, z1, x2, ty - .012, z2, M.brass);
     for (const [x, z] of [[tx1 + .02, tz1 + .02], [tx2 - .045, tz1 + .02], [tx1 + .02, tz2 - .045], [tx2 - .045, tz2 - .045]]) B(x, 0, z, x + .025, ty - .012, z + .025, M.brass);
     rod([tx1 + .05, ty - .03, tz1 + .05], [tx2 - .05, ty - .03, tz2 - .05], .008, M.brass);
     rod([tx1 + .05, ty - .03, tz2 - .05], [tx2 - .05, ty - .03, tz1 + .05], .008, M.brass);
-    chairTour(2.90, 1.93, 0); chairTour(3.46, 1.93, 0); chairTour(2.90, 3.19, Math.PI); chairTour(3.46, 3.19, Math.PI);
+    chairTour(2.90, CH_N, 0); chairTour(3.46, CH_N, 0); chairTour(2.90, CH_S, Math.PI); chairTour(3.46, CH_S, Math.PI);
     CY(3.18, ty, 2.56, .17, ty + .015, M.white);
     SP(3.12, ty + .06, 2.56, .045, M.wicker); SP(3.24, ty + .06, 2.58, .045, M.wicker);
     // lustre sputnik
@@ -3901,7 +3905,7 @@ function buildSala() {
   within(STYLE.fotos, () => {
     B(tx1 + .03, ty - .07, tz1 + .03, tx2 - .03, ty - .012, tz2 - .03, M.walnut);
     for (const [x, z] of [[tx1 + .08, tz1 + .08], [tx2 - .08, tz1 + .08], [tx1 + .08, tz2 - .08], [tx2 - .08, tz2 - .08]]) CY(x, 0, z, .025, ty - .07, M.walnut, { rTop: .035, seg: 12 });
-    chairCane(2.90, 1.93, 0); chairCane(3.46, 1.93, 0); chairCane(2.90, 3.19, Math.PI); chairCane(3.46, 3.19, Math.PI);
+    chairCane(2.90, CH_N, 0); chairCane(3.46, CH_N, 0); chairCane(2.90, CH_S, Math.PI); chairCane(3.46, CH_S, Math.PI);
     for (const [x, z] of [[2.90, 2.33], [3.46, 2.33], [2.90, 2.79], [3.46, 2.79]]) {
       B(x - .20, ty, z - .14, x + .20, ty + .004, z + .14, C('#a88457', .9), { cast: false });
       CY(x, ty + .004, z, .13, ty + .018, M.porcelain, { seg: 24 });

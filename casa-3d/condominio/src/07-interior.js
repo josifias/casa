@@ -6,7 +6,7 @@
 // prédio; nas unidades espelhadas a planta vem espelhada. Pelas janelas aparece o condomínio real.
 let KIT = null, INSIDE = null, pickBlock = '01', ROOM_ENV = null, SKY_ENV = null;
 const APTO_VARIANTS = {};                 // 'normal' e 'garden' (térreo: janela da sala vira porta)
-const APTO_EYE = 1.55, APTO_R = .2;
+const APTO_EYE = 1.55, APTO_R = .18;
 const APTO_FILLS = [[3.70, 2.25, 1.60], [6.20, 2.25, 1.40], [1.40, 2.25, 1.40], [2.60, 2.25, 3.85], [6.30, 2.25, 3.85], [4.55, 1.45, 1.85]];
 const floorName = (k) => k === 0 ? 'Térreo' : `${k + 1}º pavimento`;
 

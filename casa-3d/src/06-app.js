@@ -248,7 +248,7 @@ function goView(id, instant = false) {
 }
 
 // ---------- passeio ----------
-const R_PLAYER = .2;
+const R_PLAYER = .18;
 let walkTarget = null;
 function blocked(wx, wz) {
   const [lx, lz] = toLocal(wx, wz);
